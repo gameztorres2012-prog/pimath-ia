@@ -1,37 +1,9 @@
 const MODEL = 'gemini-3.8-flash';
-const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-
-async function callGemini(apiKey, body) {
-  const r = await fetch(URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify(body)
-  });
-  const data = await r.json().catch(() => ({}));
-  return { r, data };
-}
 
 module.exports = async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  // Diagnóstico: abrir /api/chat en el navegador
-  if (req.method === 'GET') {
-    if (!apiKey) return res.status(200).json({ keyConfigured: false });
-    const { r, data } = await callGemini(apiKey, {
-      contents: [{ role: 'user', parts: [{ text: 'Di hola' }] }]
-    });
-    return res.status(200).json({
-      keyConfigured: true,
-      keyLength: apiKey.length,
-      keyStart: apiKey.slice(0, 3),
-      googleStatus: r.status,
-      googleError: data.error ? data.error.message : null
-    });
-  }
-
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'missing_api_key' });
-
   try {
     const { history = [], message = '', image = null, studentName = '', area = '' } = req.body || {};
     const system =
@@ -50,11 +22,15 @@ module.exports = async (req, res) => {
     }
     parts.push({ text: message || 'Resuelve el problema de la imagen paso a paso.' });
     contents.push({ role: 'user', parts });
-
-    const { r, data } = await callGemini(apiKey, {
-      systemInstruction: { parts: [{ text: system }] },
-      contents
-    });
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents })
+      }
+    );
+    const data = await r.json();
     if (!r.ok) {
       console.error('Gemini error', r.status, data.error && data.error.message);
       return res.status(r.status).json({ error: (data.error && data.error.message) || 'upstream_error' });
