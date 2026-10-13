@@ -312,7 +312,7 @@ function errorCopy(msg){
   if(!msg) return 'Ocurrió un error. Intenta de nuevo.';
   const m = msg.toLowerCase();
   // Clave inyectada directamente
-window.GEMINI_API_KEY = "AQ.Ab8RN6LMhcfJO0ZC8Zz5omwAREAxg-jjPVrDsJywcGIm_Ugt1Q";
+window.GEMINI_API_KEY = "AQ.Ab8RN6KhKty7yWBBE0VoFZ2TpZ1CS4BhzN_7tN-Hh--6yXkSeQ";
   if(m.includes('quota') || m.includes('rate') || m.includes('429')) return 'Se alcanzó el límite de mensajes gratis por hoy. Intenta más tarde.';
   if(m.includes('safety') || m.includes('block')) return 'No puedo ayudar con esa solicitud. Intenta reformular tu pregunta.';
   return 'Hubo un problema de conexión. Intenta de nuevo.';
