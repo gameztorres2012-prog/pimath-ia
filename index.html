@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pimath IA</title>
-<script>
-  window.GEMINI_API_KEY = "AQ.Ab8RN6KhKty7yWBBE0VoFZ2TpZ1CS4BhzN_7tN-Hh--6yXkSeQ";
-  window.process = { env: { GEMINI_API_KEY: "AQ.Ab8RN6KhKty7yWBBE0VoFZ2TpZ1CS4BhzN_7tN-Hh--6yXkSeQ" } };
-</script>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#B8791E">
 <link rel="icon" href="/icon-192.png">
@@ -123,10 +119,11 @@ header span{ font-size:.8rem; color:var(--ink-dim); flex:1; }
 .area-chip.active{ background:var(--gold-soft); color:var(--gold); border-color:var(--gold); }
 
 #chat{ flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
-.msg{ max-width:82%; padding:11px 14px; border-radius:14px; line-height:1.5; font-size:.95rem; }
-.msg.user{ align-self:flex-end; background:#F7F6F2; border-radius:14px; border-bottom-right-radius:4px; }
-.msg.bot{ align-self:flex-start; background:transparent; border:none; }
-.msg.bot.thinking{ background:transparent; border:none; padding:4px 0; align-self:flex-start; display:flex; align-items:center; gap:10px; }
+.msg{ max-width:86%; padding:12px 16px; border-radius:18px; line-height:1.6; font-size:.96rem; word-wrap:break-word; animation:msg-in .25s ease; }
+@keyframes msg-in{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+.msg.user{ align-self:flex-end; background:#FFFFFF; color:var(--ink); border:1px solid var(--line); border-bottom-right-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+.msg.bot{ align-self:flex-start; max-width:94%; background:#FBF8F0; border:1px solid var(--line); border-bottom-left-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+.msg.bot.thinking{ background:transparent; border:none; box-shadow:none; padding:4px 0; align-self:flex-start; display:flex; align-items:center; gap:10px; }
 .thinking-logo{ width:44px; height:44px; display:block; border-radius:50%; object-fit:cover; background:var(--bot-bubble); border:1px solid var(--line); animation:pimath-pulse 1.1s ease-in-out infinite; flex-shrink:0; }
 .thinking-text{ color:var(--ink-dim); font-size:.9rem; font-style:italic; }
 @keyframes pimath-pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.08); opacity:.75; } }
@@ -134,7 +131,13 @@ header span{ font-size:.8rem; color:var(--ink-dim); flex:1; }
 .msg :is(h1,h2,h3){ font-family:var(--font-display); font-size:1.05rem; margin:.4em 0 .2em; }
 .msg strong{ color:var(--gold); }
 .msg code{ background:var(--panel-2); padding:1px 5px; border-radius:4px; font-size:.88em; }
-.msg ol, .msg ul{ padding-left:1.2em; margin:.4em 0; }
+.msg ol, .msg ul{ padding-left:1.3em; margin:.4em 0; }
+.msg li{ margin:.35em 0; }
+.msg p{ margin:.45em 0; }
+.msg > :first-child{ margin-top:0; }
+.msg > :last-child{ margin-bottom:0; }
+.msg .katex{ font-size:1.08em; }
+.msg .katex-display{ margin:.7em 0; padding:.5em .4em; background:var(--gold-soft); border-radius:10px; overflow-x:auto; overflow-y:hidden; }
 .error-note{ align-self:center; color:var(--error); font-size:.82rem; text-align:center; }
 
 #composer{
@@ -189,6 +192,9 @@ textarea#input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
 #unavailable{ display:none; padding:14px; text-align:center; color:var(--ink-dim); font-size:.85rem; }
 ::selection{ background:var(--gold-soft); }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 </head>
 <body>
 
@@ -286,12 +292,39 @@ function addMsg(role, html, opts={}){
   const div = document.createElement('div');
   div.className = 'msg ' + (role === 'user' ? 'user' : 'bot') + (opts.thinking ? ' thinking' : '');
   div.innerHTML = html;
+  if(role !== 'user' && !opts.thinking) renderMath(div);
   chatEl.appendChild(div);
   chatEl.scrollTop = chatEl.scrollHeight;
   return div;
 }
 
+function renderMath(el){
+  if(!window.renderMathInElement) return;
+  try{
+    window.renderMathInElement(el, {
+      delimiters: [
+        {left:'$$', right:'$$', display:true},
+        {left:'\\[', right:'\\]', display:true},
+        {left:'\\(', right:'\\)', display:false}
+      ],
+      throwOnError: false
+    });
+  }catch(e){}
+}
+window.addEventListener('load', () => {
+  document.querySelectorAll('.msg.bot').forEach(renderMath);
+});
+
 function mdToHtml(text){
+  // 1) Guardar las fórmulas para que el formato no las dañe
+  const maths = [];
+  text = text.replace(/\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$(?!\s)[^\n$]+?(?<!\s)\$(?!\d)/g, m => {
+    let f = m.replace(/\n/g,' ');
+    if(/^\$[^$]/.test(f)) f = '\\(' + f.slice(1,-1) + '\\)';
+    maths.push(f);
+    return '@@M' + (maths.length-1) + '@@';
+  });
+  // 2) Formato normal
   let t = text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -305,14 +338,15 @@ function mdToHtml(text){
     }
     return '<p>'+p.replace(/\n/g,'<br>')+'</p>';
   }).join('');
+  // 3) Devolver las fórmulas
+  t = t.replace(/@@M(\d+)@@/g, (_, i) =>
+    maths[i].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
   return t;
 }
 
 function errorCopy(msg){
   if(!msg) return 'Ocurrió un error. Intenta de nuevo.';
   const m = msg.toLowerCase();
-  // Clave inyectada directamente
-window.GEMINI_API_KEY = "AQ.Ab8RN6KhKty7yWBBE0VoFZ2TpZ1CS4BhzN_7tN-Hh--6yXkSeQ";
   if(m.includes('quota') || m.includes('rate') || m.includes('429')) return 'Se alcanzó el límite de mensajes gratis por hoy. Intenta más tarde.';
   if(m.includes('safety') || m.includes('block')) return 'No puedo ayudar con esa solicitud. Intenta reformular tu pregunta.';
   return 'Hubo un problema de conexión. Intenta de nuevo.';
@@ -561,7 +595,15 @@ function hablarTexto(texto){
   if(!('speechSynthesis' in window)) return;
   unlockSpeech();
   window.speechSynthesis.cancel();
-  const textoLimpio = texto.replace(/<[^>]+>/g,' ').replace(/[*#_~]/g,'');
+  const textoLimpio = texto
+    .replace(/<[^>]+>/g,' ')
+    .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g,' $1 sobre $2 ')
+    .replace(/\\sqrt\{([^{}]*)\}/g,' raíz de $1 ')
+    .replace(/\\cdot|\\times/g,' por ')
+    .replace(/\\[a-zA-Z]+/g,' ')
+    .replace(/\$/g,' ')
+    .replace(/[{}^]/g,' ')
+    .replace(/[*#_~]/g,'');
   const utterance = new SpeechSynthesisUtterance(textoLimpio);
   utterance.lang = 'es-ES';
   if(spanishVoice) utterance.voice = spanishVoice;
@@ -651,6 +693,7 @@ async function send(){
     const full = data.text || '';
     botDiv.classList.remove('thinking');
     botDiv.innerHTML = mdToHtml(full);
+    renderMath(botDiv);
     chatEl.scrollTop = chatEl.scrollHeight;
 
     turns.push({role:'user', text: text || '(imagen enviada)'});
