@@ -133,6 +133,8 @@ header span{ font-size:.8rem; color:var(--ink-dim); flex:1; }
 .msg code{ background:var(--panel-2); padding:1px 5px; border-radius:4px; font-size:.88em; }
 .msg ol, .msg ul{ padding-left:1.3em; margin:.4em 0; }
 .msg li{ margin:.35em 0; }
+.speak-btn{ display:block; margin-top:10px; background:none; border:1px solid var(--line); border-radius:14px; padding:4px 12px; font-size:.8rem; color:var(--ink-dim); cursor:pointer; font-family:var(--font-body); }
+.speak-btn:active{ background:var(--gold-soft); }
 .msg p{ margin:.45em 0; }
 .msg > :first-child{ margin-top:0; }
 .msg > :last-child{ margin-bottom:0; }
@@ -298,6 +300,22 @@ function addMsg(role, html, opts={}){
   return div;
 }
 
+function addSpeakBtn(div, text){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'speak-btn';
+  b.textContent = '🔊 Escuchar';
+  b.addEventListener('click', () => {
+    if('speechSynthesis' in window && window.speechSynthesis.speaking){
+      window.speechSynthesis.cancel();
+      document.querySelectorAll('.pimath-avatar-img').forEach(img => img.classList.remove('talking'));
+      return;
+    }
+    hablarTexto(text);
+  });
+  div.appendChild(b);
+}
+
 function renderMath(el){
   if(!window.renderMathInElement) return;
   try{
@@ -380,7 +398,7 @@ function renderActiveChat(){
     c.classList.toggle('active', c.dataset.area === currentArea);
   });
   if(history.length){
-    history.forEach(m => addMsg(m.role, m.html));
+    history.forEach(m => { const d = addMsg(m.role, m.html); if(m.speak) addSpeakBtn(d, m.text || d.textContent); });
   }else{
     addMsg('bot', greetingHtml());
   }
@@ -698,8 +716,8 @@ async function send(){
 
     turns.push({role:'user', text: text || '(imagen enviada)'});
     turns.push({role:'model', text: full});
-    hablarTexto(full);
-    history.push({role:'bot', html: mdToHtml(full)});
+    addSpeakBtn(botDiv, full);
+    history.push({role:'bot', html: mdToHtml(full), text: full, speak: true});
     saveState();
   }catch(e){
     botDiv.remove();
