@@ -389,7 +389,9 @@ function mdToHtml(text){
 function errorCopy(msg){
   if(!msg) return 'Ocurrió un error. Intenta de nuevo.';
   const m = msg.toLowerCase();
-  if(m.includes('quota') || m.includes('rate') || m.includes('429')) return 'Se alcanzó el límite de mensajes gratis por hoy. Intenta más tarde.';
+  if(m.includes('timeout') || m.includes('http_504') || m.includes('http_502')) return 'Pimath tardó demasiado en responder. Intenta de nuevo, o con una pregunta más corta.';
+  if(m.includes('demand') || m.includes('overloaded') || m.includes('unavailable') || m.includes('503')) return 'Pimath tiene mucha demanda en este momento. Intenta de nuevo en unos segundos.';
+  if(m.includes('quota') || m.includes('rate limit') || m.includes('resource_exhausted') || m.includes('429')) return 'Se alcanzó el límite de mensajes gratis por hoy. Intenta más tarde.';
   if(m.includes('safety') || m.includes('block')) return 'No puedo ayudar con esa solicitud. Intenta reformular tu pregunta.';
   return 'Hubo un problema de conexión. Intenta de nuevo.';
 }
@@ -732,7 +734,7 @@ async function send(){
     });
     const data = await r.json().catch(()=>({}));
     if(!r.ok){
-      throw new Error(data.error || 'upstream_error');
+      throw new Error(data.error || ('http_' + r.status));
     }
     const full = data.text || '';
     botDiv.classList.remove('thinking');
