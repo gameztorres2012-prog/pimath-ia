@@ -144,6 +144,8 @@ header{ position:relative; }
 #userMenu button{ width:100%; padding:9px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); color:var(--ink); font-size:.88rem; cursor:pointer; font-family:var(--font-body); }
 .name-or{ color:var(--ink-dim); font-size:.8rem; margin:16px 0 12px; }
 #gsiBtn{ display:flex; justify-content:center; min-height:44px; }
+#loginScreen{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
+.skip-link{ margin-top:18px; background:none; border:none; color:var(--ink-dim); font-size:.85rem; text-decoration:underline; cursor:pointer; font-family:var(--font-body); }
 .speak-btn{ display:block; margin-top:10px; background:none; border:1px solid var(--line); border-radius:14px; padding:4px 12px; font-size:.8rem; color:var(--ink-dim); cursor:pointer; font-family:var(--font-body); }
 .speak-btn:active{ background:var(--gold-soft); }
 .msg p{ margin:.45em 0; }
@@ -211,15 +213,22 @@ textarea#input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
 </head>
 <body>
 
-<div id="nameScreen">
+<div id="loginScreen">
+  <div class="name-card">
+    <div class="name-badge">🧮</div>
+    <h2>Pimath IA</h2>
+    <p>Tu profesor de matemáticas con IA. Inicia sesión para continuar.</p>
+    <div id="gsiBtn"></div>
+  </div>
+</div>
+
+<div id="nameScreen" style="display:none">
   <div class="name-card">
     <div class="name-badge">🧮</div>
     <h2>¡Bienvenido a Pimath IA!</h2>
     <p>¿Cómo quieres que te llame?</p>
     <input type="text" id="nameInput" placeholder="Escribe tu nombre..." maxlength="30">
     <button id="nameSubmit">Entrar a Pimath IA</button>
-    <div class="name-or">o</div>
-    <div id="gsiBtn"></div>
   </div>
 </div>
 
@@ -505,6 +514,7 @@ function enterChat(){
   if(!val) { nameInput.focus(); return; }
   studentName = val;
   nameScreen.style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
   appShell.style.display = 'flex';
   createChat();
 }
@@ -515,6 +525,7 @@ function resumeSession(saved){
   studentName = saved.name || '';
   chats = Array.isArray(saved.chats) ? saved.chats : [];
   nameScreen.style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
   appShell.style.display = 'flex';
   if(!chats.length){ createChat(); return; }
   const id = chats.find(c => c.id === saved.activeId) ? saved.activeId : chats[0].id;
@@ -803,18 +814,24 @@ function renderUserSlot(){
   }
 }
 
+function showNameStep(prefill){
+  document.getElementById('loginScreen').style.display = 'none';
+  nameScreen.style.display = 'flex';
+  nameInput.value = prefill || '';
+  try{ nameInput.focus(); }catch(e){}
+}
+
 function handleCredential(resp){
   try{
     const p = parseJwt(resp.credential);
     googleUser = { name: p.name || '', given_name: p.given_name || '', email: p.email || '', picture: p.picture || '', sub: p.sub || '' };
     localStorage.setItem(GUSER_KEY, JSON.stringify(googleUser));
   }catch(e){ return; }
-  studentName = (googleUser.given_name || googleUser.name || 'amigo').slice(0,30);
-  if(nameScreen.style.display !== 'none'){
-    nameScreen.style.display = 'none';
-    appShell.style.display = 'flex';
-    if(!chats.length) createChat();
+  const first = (googleUser.given_name || googleUser.name || '').slice(0,30);
+  if(appShell.style.display === 'none'){
+    showNameStep(first);
   } else {
+    if(!studentName) studentName = first || 'amigo';
     saveState();
   }
   renderUserSlot();
@@ -838,6 +855,9 @@ window.onGoogleLibraryLoad = function(){
   if(big) google.accounts.id.renderButton(big, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width: 260 });
   renderUserSlot();
 };
+if(appShell.style.display === 'none' && googleUser){
+  showNameStep((googleUser.given_name || googleUser.name || '').slice(0,30));
+}
 renderUserSlot();
 </script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
