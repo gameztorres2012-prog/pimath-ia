@@ -133,6 +133,17 @@ header span{ font-size:.8rem; color:var(--ink-dim); flex:1; }
 .msg code{ background:var(--panel-2); padding:1px 5px; border-radius:4px; font-size:.88em; }
 .msg ol, .msg ul{ padding-left:1.3em; margin:.4em 0; }
 .msg li{ margin:.35em 0; }
+header{ position:relative; }
+#userSlot{ align-self:center; flex-shrink:0; display:flex; align-items:center; }
+.avatar-btn{ width:38px; height:38px; border-radius:50%; border:2px solid var(--gold-soft); padding:0; background:var(--gold); color:#fff; font-weight:700; font-size:1rem; cursor:pointer; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.avatar-btn img{ width:100%; height:100%; object-fit:cover; display:block; }
+#userMenu{ display:none; position:absolute; right:14px; top:calc(100% - 4px); z-index:40; min-width:230px; max-width:80vw; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.15); padding:14px; }
+#userMenu.open{ display:block; }
+#userMenu .um-name{ font-weight:600; font-size:.95rem; margin:0; word-break:break-word; }
+#userMenu .um-mail{ font-size:.8rem; color:var(--ink-dim); margin:2px 0 12px; word-break:break-all; }
+#userMenu button{ width:100%; padding:9px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); color:var(--ink); font-size:.88rem; cursor:pointer; font-family:var(--font-body); }
+.name-or{ color:var(--ink-dim); font-size:.8rem; margin:16px 0 12px; }
+#gsiBtn{ display:flex; justify-content:center; min-height:44px; }
 .speak-btn{ display:block; margin-top:10px; background:none; border:1px solid var(--line); border-radius:14px; padding:4px 12px; font-size:.8rem; color:var(--ink-dim); cursor:pointer; font-family:var(--font-body); }
 .speak-btn:active{ background:var(--gold-soft); }
 .msg p{ margin:.45em 0; }
@@ -207,6 +218,8 @@ textarea#input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
     <p>¿Cómo quieres que te llame?</p>
     <input type="text" id="nameInput" placeholder="Escribe tu nombre..." maxlength="30">
     <button id="nameSubmit">Entrar a Pimath IA</button>
+    <div class="name-or">o</div>
+    <div id="gsiBtn"></div>
   </div>
 </div>
 
@@ -225,6 +238,8 @@ textarea#input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
   <button id="menuBtn" class="icon-btn" title="Historial">☰</button>
   <h1>Pimath IA</h1>
   <span>Tu profesor IA</span>
+  <div id="userSlot"></div>
+  <div id="userMenu"></div>
 </header>
 
 <div id="areas">
@@ -740,5 +755,91 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<script>
+const GOOGLE_CLIENT_ID = '488782968994-tfkc9v53k62venlapkpjvhu5sot7516p.apps.googleusercontent.com';
+const GUSER_KEY = 'pimath_google_user';
+let googleUser = null;
+try{ googleUser = JSON.parse(localStorage.getItem(GUSER_KEY) || 'null'); }catch(e){ googleUser = null; }
+
+function parseJwt(t){
+  const b = t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+  const json = decodeURIComponent(atob(b).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+  return JSON.parse(json);
+}
+
+function renderUserSlot(){
+  const slot = document.getElementById('userSlot');
+  const menu = document.getElementById('userMenu');
+  if(!slot || !menu) return;
+  slot.innerHTML = '';
+  menu.classList.remove('open');
+  menu.innerHTML = '';
+  if(googleUser){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'avatar-btn'; b.title = googleUser.name || 'Cuenta';
+    const letra = (googleUser.name || '?').trim().charAt(0).toUpperCase();
+    if(googleUser.picture && /^https:\/\//.test(googleUser.picture)){
+      const img = document.createElement('img');
+      img.referrerPolicy = 'no-referrer'; img.alt = '';
+      img.onerror = () => { b.textContent = letra; };
+      img.src = googleUser.picture;
+      b.appendChild(img);
+    } else { b.textContent = letra; }
+    b.addEventListener('click', () => menu.classList.toggle('open'));
+    slot.appendChild(b);
+
+    const n = document.createElement('p'); n.className = 'um-name'; n.textContent = googleUser.name || '';
+    const m = document.createElement('p'); m.className = 'um-mail'; m.textContent = googleUser.email || '';
+    const out = document.createElement('button'); out.type = 'button'; out.textContent = 'Cerrar sesión';
+    out.addEventListener('click', signOutGoogle);
+    menu.appendChild(n); menu.appendChild(m); menu.appendChild(out);
+  } else {
+    const holder = document.createElement('div');
+    slot.appendChild(holder);
+    if(window.google && google.accounts && google.accounts.id){
+      google.accounts.id.renderButton(holder, { type:'icon', theme:'outline', size:'medium', shape:'circle' });
+    }
+  }
+}
+
+function handleCredential(resp){
+  try{
+    const p = parseJwt(resp.credential);
+    googleUser = { name: p.name || '', given_name: p.given_name || '', email: p.email || '', picture: p.picture || '', sub: p.sub || '' };
+    localStorage.setItem(GUSER_KEY, JSON.stringify(googleUser));
+  }catch(e){ return; }
+  studentName = (googleUser.given_name || googleUser.name || 'amigo').slice(0,30);
+  if(nameScreen.style.display !== 'none'){
+    nameScreen.style.display = 'none';
+    appShell.style.display = 'flex';
+    if(!chats.length) createChat();
+  } else {
+    saveState();
+  }
+  renderUserSlot();
+}
+
+function signOutGoogle(){
+  try{ localStorage.removeItem(GUSER_KEY); }catch(e){}
+  googleUser = null;
+  if(window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+  renderUserSlot();
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('userMenu');
+  if(menu && menu.classList.contains('open') && !menu.contains(e.target) && !e.target.closest('#userSlot')) menu.classList.remove('open');
+});
+
+window.onGoogleLibraryLoad = function(){
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredential, auto_select: false });
+  const big = document.getElementById('gsiBtn');
+  if(big) google.accounts.id.renderButton(big, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width: 260 });
+  renderUserSlot();
+};
+renderUserSlot();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>
