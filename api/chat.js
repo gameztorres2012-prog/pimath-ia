@@ -1,21 +1,32 @@
 const MODEL = 'gemini-3.8-flash';
 
+const sleep = ms => new Promise(ok => setTimeout(ok, ms));
+
 async function callGemini(apiKey, body) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-  let last;
-  // Si Google está saturado (503), reintenta hasta 3 veces
+  const start = Date.now();
+  let last = null;
+  // Máximo ~52 s en total; si Google está saturado (503), reintenta hasta 3 veces
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify(body)
-    });
-    const data = await r.json().catch(() => ({}));
-    last = { r, data };
-    if (r.status !== 503) break;
-    await new Promise(ok => setTimeout(ok, 1000 * attempt));
+    const remaining = 52000 - (Date.now() - start);
+    if (remaining < 5000) break;
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(remaining)
+      });
+      const data = await r.json().catch(() => ({}));
+      last = { r, data };
+      if (r.status !== 503) return last;
+    } catch (e) {
+      if (e.name === 'TimeoutError' || e.name === 'AbortError') return { timeout: true };
+      throw e;
+    }
+    await sleep(1000 * attempt);
   }
-  return last;
+  return last || { timeout: true };
 }
 
 module.exports = async (req, res) => {
@@ -44,10 +55,16 @@ module.exports = async (req, res) => {
     parts.push({ text: message || 'Resuelve el problema de la imagen paso a paso.' });
     contents.push({ role: 'user', parts });
 
-    const { r, data } = await callGemini(apiKey, {
+    const result = await callGemini(apiKey, {
       systemInstruction: { parts: [{ text: system }] },
-      contents
+      contents,
+      generationConfig: {
+        thinkingConfig: { thinkingLevel: 'low' },
+        maxOutputTokens: 4096
+      }
     });
+    if (result.timeout) return res.status(504).json({ error: 'timeout' });
+    const { r, data } = result;
     if (!r.ok) {
       console.error('Gemini error', r.status, data.error && data.error.message);
       return res.status(r.status).json({ error: (data.error && data.error.message) || 'upstream_error' });
@@ -60,3 +77,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: String(e && e.message || e) });
   }
 };
+                                       
