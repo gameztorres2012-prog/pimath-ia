@@ -4,6 +4,7 @@
 const PRIMARY = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 const FALLBACKS = (process.env.GEMINI_FALLBACK_MODELS || '').split(',').map(s => s.trim()).filter(Boolean);
 const sleep = ms => new Promise(ok => setTimeout(ok, ms));
+const SLICE_MS = Number(process.env.PRIMARY_SLICE_MS) || 22000; // tiempo máximo por modelo antes de pasar al siguiente
 
 async function post(apiKey, model, body, remaining) {
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -19,7 +20,8 @@ async function post(apiKey, model, body, remaining) {
 function buildBody(model, system, contents, mode) {
   if (mode === 'full') {
     const generationConfig = { maxOutputTokens: 4096 };
-    if (/^gemini/i.test(model)) generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+    // Gemini: pensamiento bajo. Gemma 4: pensamiento mínimo (si no, es muy lento y muestra su razonamiento)
+    generationConfig.thinkingConfig = { thinkingLevel: /^gemma/i.test(model) ? 'MINIMAL' : 'low' };
     return { systemInstruction: { parts: [{ text: system }] }, contents, generationConfig };
   }
   // Modo simple: algunos modelos (p. ej. Gemma) no aceptan instrucciones de sistema
@@ -86,19 +88,31 @@ module.exports = async (req, res) => {
 
     const deadline = Date.now() + 52000;
     let result = null;
-    for (const model of [PRIMARY, ...FALLBACKS]) {
-      result = await tryModel(apiKey, model, system, contents, deadline);
-      if (!result || result.timeout) return res.status(504).json({ error: 'timeout' });
-      if (result.r.ok) break;
+    const models = [PRIMARY, ...FALLBACKS];
+    for (let i = 0; i < models.length; i++) {
+      const model = models[i];
+      const isLast = i === models.length - 1;
+      const modelDeadline = isLast ? deadline : Math.min(deadline, Date.now() + SLICE_MS);
+      result = await tryModel(apiKey, model, system, contents, modelDeadline);
+      if (!result || result.timeout) {
+        console.error('Modelo', model, 'tardó demasiado');
+        if (isLast || deadline - Date.now() < 5000) return res.status(504).json({ error: 'timeout' });
+        continue;
+      }
+      if (result.r.ok) { result.model = model; break; }
       const st = result.r.status;
       console.error('Modelo', model, 'falló:', st, result.data.error && result.data.error.message);
       if (![429, 404, 503].includes(st)) break; // otros errores: no tiene sentido probar otro modelo
     }
+    if (!result || result.timeout) return res.status(504).json({ error: 'timeout' });
     const { r, data } = result;
     if (!r.ok) {
       return res.status(r.status).json({ error: (data.error && data.error.message) || 'upstream_error' });
     }
-    const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+    const allParts = data.candidates?.[0]?.content?.parts || [];
+    console.log('partes', result.model, JSON.stringify(allParts.map(p => ({ pensamiento: !!p.thought, largo: (p.text || '').length }))));
+    const visibles = allParts.filter(p => !p.thought);
+    const text = (visibles.length ? visibles : allParts).map(p => p.text || '').join('');
     if (!text) return res.status(502).json({ error: 'safety block' });
     return res.status(200).json({ text });
   } catch (e) {
