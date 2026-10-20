@@ -95,7 +95,7 @@ textarea#input::placeholder{ color:#444; }
   --ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z'/></svg>");
 }
 #sendBtn{
-  --ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/></svg>");
+  --ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z'/></svg>");
 }
 
 /* ===== Más espacio a los lados y texto más ordenado (como Gemini) ===== */
@@ -124,7 +124,8 @@ textarea#input::placeholder{ color:#444; }
 
 /* ===== Tamaño general como zoom 90% (solo tablet/pantallas grandes) ===== */
 @media (min-width:560px){
-  html{ zoom:.9; }
+  /* zoom por partes (no en html) para que la barra no se desplace al bajar */
+  header, #areas, #chat, #composer, #unavailable{ zoom:.9; }
 }
 
 /* ===== Burbujas de áreas (General, Aritmética, Premium...) más pequeñas ===== */
@@ -138,3 +139,7 @@ textarea#input::placeholder{ color:#444; }
 @media (min-width:560px){
   #areas{ padding-left:12%; padding-right:12%; }
 }
+
+/* La página no se desplaza completa: solo el chat */
+html, body{ overflow:hidden; }
+#appShell{ height:100%; }
