@@ -146,6 +146,8 @@ header{ position:relative; }
 #gsiBtn{ display:flex; justify-content:center; min-height:44px; }
 #loginScreen{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
 .skip-link{ margin-top:18px; background:none; border:none; color:var(--ink-dim); font-size:.85rem; text-decoration:underline; cursor:pointer; font-family:var(--font-body); }
+#premiumToast{ position:fixed; left:50%; bottom:calc(110px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(16px); background:#1C2620; color:#fff; padding:12px 18px; border-radius:24px; font-size:.9rem; line-height:1.4; text-align:center; max-width:88vw; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:60; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+#premiumToast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 .speak-btn{ display:block; margin-top:10px; background:none; border:1px solid var(--line); border-radius:14px; padding:4px 12px; font-size:.8rem; color:var(--ink-dim); cursor:pointer; font-family:var(--font-body); }
 .speak-btn:active{ background:var(--gold-soft); }
 .msg p{ margin:.45em 0; }
@@ -247,7 +249,7 @@ textarea#input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
   <button id="menuBtn" class="icon-btn" title="Historial">☰</button>
   <h1>Pimath IA</h1>
   <span>Tu profesor IA</span>
-  <button id="premiumChip" class="premium-chip header-premium" type="button">Actualizar a Premium<small>para obtener Pimath App sin internet</small></button>
+  <button id="premiumChip" class="premium-chip header-premium" type="button">Actualizar a Premium<small>para obtener la app de Pimath sin internet</small></button>
   <div id="userSlot"></div>
   <div id="userMenu"></div>
 </header>
@@ -526,6 +528,11 @@ nameInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') enterChat(); 
 function resumeSession(saved){
   studentName = saved.name || '';
   chats = Array.isArray(saved.chats) ? saved.chats : [];
+  chats.forEach(c => {
+    if(c && Array.isArray(c.history)){
+      c.history = c.history.filter(m => !(m && typeof m.html === 'string' && m.html.includes('Bienvenido a Pimath Premium')));
+    }
+  });
   nameScreen.style.display = 'none';
   document.getElementById('loginScreen').style.display = 'none';
   appShell.style.display = 'flex';
@@ -664,14 +671,15 @@ function hablarTexto(texto){
   window.speechSynthesis.speak(utterance);
 }
 
-// --- Pimath Premium (vitrina, sin cobro real todavía) ---
-document.getElementById('premiumChip').addEventListener('click', ()=>{
-  const premiumText = '⭐ <strong>¡Bienvenido a Pimath Premium!</strong> ⭐<br><br>Con la versión Premium tienes acceso a:<br>• Respuestas explicadas por voz en tiempo real 🗣️<br>• Corrección de exámenes por foto en segundos 📸<br>• Tutoría personalizada 24/7 sin límites.';
-  const avatarHtml = `<div class="pimath-avatar-container"><img src="${LOGO_SRC}" class="pimath-avatar-img" alt="Pimath IA"></div>`;
-  addMsg('bot', avatarHtml + premiumText);
-  history.push({role:'bot', html: avatarHtml + premiumText});
-  saveState();
-  hablarTexto('Bienvenido a Pimath Premium. Tienes acceso a tutorías personalizadas y respuestas explicadas por voz sin límites.');
+// --- Pimath Premium: todavía en desarrollo (no hay compra) ---
+let premiumToastTimer = null;
+document.getElementById('premiumChip').addEventListener('click', () => {
+  let t = document.getElementById('premiumToast');
+  if(!t){ t = document.createElement('div'); t.id = 'premiumToast'; document.body.appendChild(t); }
+  t.textContent = '🚧 Premium está en desarrollo. ¡Pronto estará disponible!';
+  t.classList.add('show');
+  clearTimeout(premiumToastTimer);
+  premiumToastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 });
 
 function primeSpeech(){
