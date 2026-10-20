@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&display=swap');
+
 /* Pimath IA – estilo Gemini: barra redonda, letra negra, pregunta centrada */
 
 /* Letra negra en todo */
@@ -7,19 +9,38 @@ body, .msg, .msg.bot, .msg.user, header h1, header span,
 .msg strong{ color:#000; }
 .thinking-text{ color:#222; }
 
-/* Pregunta del usuario: sin burbuja y centrada */
-.msg.user{
-  align-self:center;
-  max-width:90%;
+/* Tipo de letra de Gemini (Google Sans Flex) */
+:root:root:root{ --font-body:'Google Sans Flex','Google Sans',Roboto,system-ui,sans-serif; }
+body, textarea#input, .msg, .area-chip, header{ font-family:var(--font-body); }
+
+/* Respuesta de Pimath: sin burbuja, como Gemini */
+.msg.bot{
+  align-self:flex-start;
+  max-width:100%;
   background:none;
   border:0;
   box-shadow:none;
   border-radius:0;
-  text-align:center;
-  font-size:1.05rem;
-  padding:8px 12px;
+  padding:4px 4px;
+  font-size:1.02rem;
+  line-height:1.65;
 }
-.msg.user img.attach{ margin:0 auto 8px; }
+.msg.bot.thinking{ padding:4px 0; }
+
+/* Pregunta del usuario: a la derecha, burbuja gris */
+.msg.user{
+  align-self:flex-end;
+  max-width:80%;
+  background:#eeeeee;
+  color:#000;
+  border:0;
+  box-shadow:none;
+  border-radius:24px;
+  padding:12px 20px;
+  font-size:1.02rem;
+  text-align:left;
+}
+.msg.user img.attach{ margin:0 0 8px; border-radius:12px; }
 
 /* Barra de escribir: grande y redonda como Gemini */
 #composer{
@@ -75,4 +96,4 @@ textarea#input::placeholder{ color:#444; }
 }
 #sendBtn{
   --ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/></svg>");
-}
+  }
