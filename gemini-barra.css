@@ -96,4 +96,28 @@ textarea#input::placeholder{ color:#444; }
 }
 #sendBtn{
   --ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z'/></svg>");
-  }
+}
+
+/* ===== Más espacio a los lados y texto más ordenado (como Gemini) ===== */
+#chat{ padding:20px 18px 28px; gap:24px; }
+#composer{ padding-left:18px; padding-right:18px; }
+@media (min-width:700px){
+  #chat{ padding-left:12%; padding-right:12%; }
+  #composer{ padding-left:14%; padding-right:14%; }
+}
+
+.msg.bot{ line-height:1.7; }
+.msg p{ margin:.7em 0; }
+.msg :is(h1,h2,h3){
+  font-family:var(--font-body);
+  font-weight:500;
+  font-size:1.2rem;
+  line-height:1.35;
+  margin:1.5em 0 .5em;
+}
+.msg > :is(h1,h2,h3):first-child{ margin-top:0; }
+.msg ol, .msg ul{ padding-left:1.6em; margin:.8em 0; }
+.msg li{ margin:.65em 0; padding-left:.2em; }
+.msg strong{ font-weight:600; }
+.msg .katex-display{ margin:1em 0; }
+.speak-btn{ margin-top:14px; }
