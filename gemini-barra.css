@@ -101,7 +101,7 @@ textarea#input::placeholder{ color:#444; }
 /* ===== Más espacio a los lados y texto más ordenado (como Gemini) ===== */
 #chat{ padding:20px 18px 28px; gap:24px; }
 #composer{ padding-left:18px; padding-right:18px; }
-@media (min-width:700px){
+@media (min-width:560px){
   #chat{ padding-left:12%; padding-right:12%; }
   #composer{ padding-left:14%; padding-right:14%; }
 }
@@ -123,18 +123,18 @@ textarea#input::placeholder{ color:#444; }
 .speak-btn{ margin-top:14px; }
 
 /* ===== Tamaño general como zoom 90% (solo tablet/pantallas grandes) ===== */
-@media (min-width:700px){
+@media (min-width:560px){
   html{ zoom:.9; }
 }
 
 /* ===== Burbujas de áreas (General, Aritmética, Premium...) más pequeñas ===== */
 #areas{ gap:6px; padding:8px 16px; }
 .area-chip{
-  font-size:.72rem;
-  padding:3px 10px;
+  font-size:.76rem;
+  padding:4px 11px;
   line-height:1.3;
 }
-.premium-chip{ font-size:.72rem !important; padding:3px 10px !important; }
-@media (min-width:700px){
+.premium-chip{ font-size:.76rem !important; padding:4px 11px !important; }
+@media (min-width:560px){
   #areas{ padding-left:12%; padding-right:12%; }
 }
