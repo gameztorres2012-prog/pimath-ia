@@ -172,4 +172,14 @@ html, body{ overflow:hidden; }
 }
 @media (max-width:480px){
   header span{ display:none; }
-          }
+}
+
+/* ===== Título "Pimath IA" con la letra de Gemini ===== */
+header h1{
+  font-family:var(--font-body);
+  font-weight:500;
+  font-size:1.3rem;
+  letter-spacing:0;
+  color:#000;
+}
+header span{ font-family:var(--font-body); }
