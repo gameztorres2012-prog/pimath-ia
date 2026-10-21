@@ -780,6 +780,77 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('/sw.js').catch(()=>{ /* instalación no disponible; seguir sin PWA */ });
   });
 }
+
+/* ===== Barra para instalar Pimath IA ===== */
+(function(){
+  const KEY = 'pimath_install_dismissed';
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(isStandalone) return;
+  try{ const t = parseInt(localStorage.getItem(KEY) || '0', 10); if(t && Date.now() - t < 7*24*3600*1000) return; }catch(e){}
+
+  const st = document.createElement('style');
+  st.textContent = '#installBar{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:9999;display:none;align-items:center;gap:10px;padding:10px 12px;background:var(--panel,#fff);color:var(--ink,#1C2620);border:1px solid var(--line,#E4DCC8);border-radius:14px;box-shadow:0 6px 24px rgba(0,0,0,.18);max-width:520px;margin:0 auto;font-family:var(--font-body,system-ui,sans-serif)}'
+    + '#installBar img{width:38px;height:38px;border-radius:9px;flex:none}'
+    + '#installBar .ib-txt{flex:1;min-width:0;font-size:14px;line-height:1.25}'
+    + '#installBar .ib-txt b{display:block;font-size:14.5px}'
+    + '#installBar .ib-txt span{color:var(--ink-dim,#5E6B62);font-size:12.5px}'
+    + '#installBar button{font:inherit;cursor:pointer;border:0}'
+    + '#installBar .ib-go{background:var(--gold,#B8791E);color:#fff;font-weight:600;font-size:14px;padding:9px 14px;border-radius:999px}'
+    + '#installBar .ib-x{background:transparent;color:var(--ink-dim,#5E6B62);font-size:20px;line-height:1;padding:4px 6px}';
+  document.head.appendChild(st);
+
+  const bar = document.createElement('div');
+  bar.id = 'installBar';
+  bar.setAttribute('role','dialog');
+  bar.innerHTML = '<img src="/icon-192.png" alt="">'
+    + '<div class="ib-txt"><b>Instala Pimath IA</b><span class="ib-sub">Ábrela como una app, más rápido.</span></div>'
+    + '<button type="button" class="ib-go">Instalar</button>'
+    + '<button type="button" class="ib-x" aria-label="Cerrar">\u00D7</button>';
+  document.body.appendChild(bar);
+
+  const go = bar.querySelector('.ib-go');
+  const sub = bar.querySelector('.ib-sub');
+  let deferred = null;
+
+  let timer = null;
+  function showBar(){
+    bar.style.display = 'flex';
+    clearTimeout(timer);
+    timer = setTimeout(() => hide(false), 5000); // desaparece solo a los 5 segundos
+  }
+  function hide(remember){
+    clearTimeout(timer);
+    bar.style.display = 'none';
+    if(remember){ try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){} }
+  }
+  bar.querySelector('.ib-x').addEventListener('click', () => hide(true));
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferred = e;
+    showBar();
+  });
+
+  go.addEventListener('click', async () => {
+    if(!deferred) return;
+    clearTimeout(timer);
+    deferred.prompt();
+    try{ await deferred.userChoice; }catch(e){}
+    deferred = null;
+    hide(false);
+  });
+
+  window.addEventListener('appinstalled', () => hide(false));
+
+  // iPhone/iPad (Safari no tiene botón de instalar automático)
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+  if(isIOS){
+    sub.textContent = 'Toca Compartir y luego “Agregar a inicio”.';
+    go.style.display = 'none';
+    showBar();
+  }
+})();
 </script>
 
 <script>
