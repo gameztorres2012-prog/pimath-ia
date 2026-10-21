@@ -869,6 +869,10 @@ window.onGoogleLibraryLoad = function(){
   const big = document.getElementById('gsiBtn');
   if(big) google.accounts.id.renderButton(big, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width: 260 });
   renderUserSlot();
+  // Muestra la lista de cuentas de Google (One Tap) si aún no ha iniciado sesión
+  if(!googleUser && appShell.style.display === 'none'){
+    try{ google.accounts.id.prompt(); }catch(e){}
+  }
 };
 if(appShell.style.display === 'none' && googleUser){
   showNameStep((googleUser.given_name || googleUser.name || '').slice(0,30));
