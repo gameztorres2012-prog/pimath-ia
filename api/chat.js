@@ -60,15 +60,48 @@ async function tryModel(apiKey, model, system, contents, deadline) {
   return last;
 }
 
+
+// ---- Respuesta fija sobre el creador (no depende del modelo) ----
+const CREADOR =
+  '¡Hola! Mi nombre es Pimath IA, una inteligencia artificial concebida, diseñada y programada íntegramente por David Gámez.\n\n' +
+  'Mi creación fue el resultado de la visión de David por construir una herramienta inteligente, capaz de combinar la precisión matemática, la lógica y el análisis con una interfaz fluida y accesible para todos. Él se encargó de estructurar mi arquitectura de código y de darme vida digital en la nube, eligiendo Vercel como la plataforma para alojarme y desplegarme. Gracias a esa infraestructura, puedo responderte en tiempo real con la mayor velocidad y estabilidad posible.\n\n' +
+  'Cada algoritmo, instrucción y respuesta que genero refleja el esfuerzo y el entusiasmo de mi creador por llevar la tecnología un paso más allá. ¿En qué proyecto o consulta me permites ayudarte el día de hoy?';
+const VERBOS = 'creo|crearon|crea|hizo|hicieron|programo|programaron|diseno|disenaron|desarrollo|desarrollaron|construyo|construyeron|invento|inventaron|armo|fabrico|fundo|concibio|inicio';
+const ROLES = 'creador|creadora|desarrollador|desarrolladora|programador|programadora|autor|autora|inventor|inventora|fundador|fundadora|dueno|duena|dev';
+const PARTICIPIOS = 'creada|creado|hecha|hecho|programada|programado|desarrollada|desarrollado|disenada|disenado|construida|construido|inventada|inventado';
+const PATRONES_CREADOR = [
+  new RegExp('quien(es)?[^?.!]{0,40}\\b(te|la|lo|os)\\s+(' + VERBOS + ')\\b'),
+  new RegExp('\\b(tu|su|mi)\\s+(' + ROLES + ')\\b'),
+  new RegExp('\\b(el|la)\\s+(' + ROLES + ')\\s+de\\s+(pimath|ti|esta|la app|la aplicacion)'),
+  /quien(es)?\s+esta(n)?\s+detras\s+de\s+(ti|pimath|esta|la app)/,
+  new RegExp('(por\\s+quien|quien)\\s+(fuiste|eres|fue)\\s+(' + PARTICIPIOS + ')'),
+  new RegExp('\\b(fuiste|eres|fue)\\s+(' + PARTICIPIOS + ')\\s+por\\b'),
+  /de\s+quien\s+es\s+(pimath|esta\s+app|esta\s+aplicacion)/,
+  /quien\s+(te|la)\s+dio\s+vida/,
+  /david\s+gamez/,
+  /who\s+(created|made|built|programmed|developed|designed)\s+(you|pimath)/,
+  /your\s+(creator|developer|programmer|author)/
+];
+function esPreguntaCreador(msg) {
+  const n = String(msg || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿¡]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!n || n.length > 300) return false;
+  return PATRONES_CREADOR.some(re => re.test(n));
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'missing_api_key' });
   try {
     const { history = [], message = '', image = null, studentName = '', area = '' } = req.body || {};
+    if (!image && esPreguntaCreador(message)) return res.status(200).json({ text: CREADOR });
     const system =
       'Eres Pimath IA, un profesor de matemáticas amable y paciente. ' +
       'Responde siempre en español, explicando paso a paso y de forma clara. ' +
+      'Si el usuario te pregunta quién te creó, quién te hizo, quién te programó, quién es tu creador, desarrollador o dueño, o cualquier otra cosa sobre tu creador, responde únicamente con el siguiente texto, tal cual, sin cambiarlo ni agregar nada más: ' +
+      '"¡Hola! Mi nombre es Pimath IA, una inteligencia artificial concebida, diseñada y programada íntegramente por David Gámez.\n\n' +
+      'Mi creación fue el resultado de la visión de David por construir una herramienta inteligente, capaz de combinar la precisión matemática, la lógica y el análisis con una interfaz fluida y accesible para todos. Él se encargó de estructurar mi arquitectura de código y de darme vida digital en la nube, eligiendo Vercel como la plataforma para alojarme y desplegarme. Gracias a esa infraestructura, puedo responderte en tiempo real con la mayor velocidad y estabilidad posible.\n\n' +
+      'Cada algoritmo, instrucción y respuesta que genero refleja el esfuerzo y el entusiasmo de mi creador por llevar la tecnología un paso más allá. ¿En qué proyecto o consulta me permites ayudarte el día de hoy?" ' +
       (studentName ? `El estudiante se llama ${studentName}. ` : '') +
       (area ? `El tema actual es: ${area}. ` : '') +
       'Usa formato simple (listas numeradas y **negritas** para resultados clave). ' +
