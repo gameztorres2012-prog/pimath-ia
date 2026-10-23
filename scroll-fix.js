@@ -230,7 +230,19 @@
     nequi: '',     // Ej: '300 123 4567'
     efecty: '',    // Ej: 'Giro a nombre de Juan Pérez, cédula 123456789'
     correo: '',    // Correo donde te llegan los comprobantes
-    whatsapp: ''   // Opcional, solo números con indicativo. Ej: '573001234567'
+    whatsapp: '',  // Opcional, solo números con indicativo. Ej: '573001234567'
+    // Lo que obtiene el usuario con Premium (puedes agregar o quitar líneas):
+    beneficios: [
+      'Usa Pimath sin internet, donde quieras',
+      'La IA se guarda en tu dispositivo (descarga única)',
+      'Mismo diseño, mismas fórmulas y mismo profesor, con o sin conexión'
+    ],
+    // Lo que debe saber el usuario antes de descargar (puedes editar estas líneas):
+    avisos: [
+      'Ocupa unos 3 GB de almacenamiento en tu dispositivo',
+      'Carga el modelo en la memoria y en la GPU',
+      'Gasta energía: consume más batería'
+    ]
   };
 
   var KEY = 'pimath_premium';
@@ -294,6 +306,30 @@
     if (m && m.parentNode) m.parentNode.removeChild(m);
   }
 
+  function pintarBeneficios(card, premium) {
+    var caja = el('div', 'margin:14px 0 4px;padding:14px;background:#FBF8EE;border:1px solid #E4DCC8;border-radius:14px;');
+    caja.appendChild(el('p', 'margin:0 0 8px;font-weight:600;', premium ? 'Tus beneficios Premium' : 'Lo que obtienes con Premium'));
+    (CONFIG.beneficios || []).forEach(function (b) {
+      var fila = el('div', 'display:flex;gap:8px;margin:6px 0;align-items:flex-start;');
+      fila.appendChild(el('span', 'color:#B8791E;font-weight:700;flex-shrink:0;', '✓'));
+      fila.appendChild(el('span', '', b));
+      caja.appendChild(fila);
+    });
+    card.appendChild(caja);
+  }
+
+  function pintarAvisos(card) {
+    var caja = el('div', 'margin:10px 0 4px;padding:14px;background:#FFF6E5;border:1px solid #F0D9A8;border-radius:14px;');
+    caja.appendChild(el('p', 'margin:0 0 8px;font-weight:600;', 'Ten en cuenta'));
+    (CONFIG.avisos || []).forEach(function (a) {
+      var fila = el('div', 'display:flex;gap:8px;margin:6px 0;align-items:flex-start;');
+      fila.appendChild(el('span', 'color:#B8791E;font-weight:700;flex-shrink:0;', '•'));
+      fila.appendChild(el('span', '', a));
+      caja.appendChild(fila);
+    });
+    card.appendChild(caja);
+  }
+
   function abrirModal() {
     cerrarModal();
     var u = usuario();
@@ -301,12 +337,20 @@
     ov.id = 'pimathPremiumModal';
     ov.addEventListener('click', function (e) { if (e.target === ov) cerrarModal(); });
 
-    var card = el('div', 'background:#fff;color:#1C2620;border-radius:20px;max-width:380px;width:100%;max-height:88vh;overflow:auto;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.3);font-family:var(--font-body,system-ui,sans-serif);font-size:.95rem;line-height:1.5;');
+    var card = el('div', 'background:#fff;color:#1C2620;border-radius:20px;max-width:420px;width:100%;max-height:88vh;overflow:auto;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.3);font-family:var(--font-body,system-ui,sans-serif);font-size:.95rem;line-height:1.5;');
     ov.appendChild(card);
 
     var btnCss = 'display:block;width:100%;padding:12px;border:none;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px;text-align:center;text-decoration:none;box-sizing:border-box;';
 
-    card.appendChild(el('h2', 'margin:0 0 4px;font-size:1.25rem;', 'Pimath Premium'));
+    var cab = el('div', 'display:flex;align-items:center;gap:12px;');
+    var logo = el('img', 'width:48px;height:48px;border-radius:12px;');
+    logo.src = '/icon-192.png';
+    logo.alt = 'Pimath IA';
+    cab.appendChild(logo);
+    cab.appendChild(el('h2', 'margin:0;font-size:1.3rem;', 'Pimath Premium'));
+    card.appendChild(cab);
+    pintarBeneficios(card, estado.premium);
+    pintarAvisos(card);
 
     if (!u || !u.email) {
       card.appendChild(el('p', 'margin:8px 0 0;color:#5E6B62;', 'Inicia sesión con Google para activar Premium y usar Pimath sin internet.'));
@@ -410,138 +454,4 @@
           boton.textContent = 'Borrar la IA del dispositivo';
           boton.style.background = '#F1ECDD';
           boton.style.color = '#1C2620';
-          boton.onclick = function () {
-            if (!window.confirm('¿Borrar la IA guardada? Tendrás que descargarla otra vez para usarla sin internet.')) return;
-            P.borrar().then(estadoInicial);
-          };
-        } else {
-          info.textContent = 'Descarga única de unos 3.4 GB. Usa WiFi, ten espacio libre y no cierres la app mientras descarga.';
-          boton.style.display = 'block';
-          boton.textContent = 'Descargar modo sin internet';
-          boton.style.background = '#B8791E';
-          boton.style.color = '#fff';
-          boton.onclick = descargar;
-        }
-      }
-      function descargar() {
-        function seguir() {
-          boton.disabled = true;
-          pista.style.display = 'block';
-          barra.style.width = '2%';
-          info.textContent = 'Descargando… 0%. No cierres la app.';
-          P.descargar(function (pct) {
-            barra.style.width = pct.toFixed(0) + '%';
-            info.textContent = 'Descargando… ' + pct.toFixed(0) + '%. No cierres la app.';
-          }).then(function () {
-            estadoInicial();
-          }).catch(function (e) {
-            pista.style.display = 'none';
-            boton.disabled = false;
-            var m = String((e && e.message) || e);
-            info.textContent = m === 'sin_webgpu'
-              ? 'Tu dispositivo no soporta WebGPU.'
-              : 'No se pudo descargar. Revisa tu internet y el espacio libre, e inténtalo de nuevo. (' + m.slice(0, 120) + ')';
-          });
-        }
-        if (navigator.storage && navigator.storage.estimate) {
-          navigator.storage.estimate().then(function (est) {
-            var libre = (est && est.quota && est.usage != null) ? est.quota - est.usage : null;
-            if (libre !== null && libre < 4.2e9) {
-              if (!window.confirm('Parece que no hay suficiente espacio libre (hacen falta unos 4 GB). ¿Intentar de todos modos?')) return;
-            }
-            seguir();
-          }, seguir);
-        } else { seguir(); }
-      }
-      estadoInicial();
-    }, function () {
-      info.textContent = 'No se pudo cargar el modo sin internet. Revisa tu conexión e inténtalo de nuevo.';
-    });
-  }
-
-  function jsonResp(obj, status) {
-    return new Response(JSON.stringify(obj), { status: status || 200, headers: { 'Content-Type': 'application/json' } });
-  }
-
-  function conAbort(promesa, signal) {
-    if (!signal) return promesa;
-    return new Promise(function (res, rej) {
-      if (signal.aborted) return rej(new DOMException('Aborted', 'AbortError'));
-      signal.addEventListener('abort', function () { rej(new DOMException('Aborted', 'AbortError')); });
-      promesa.then(res, rej);
-    });
-  }
-
-  function respuestaLocal(cuerpo, init) {
-    if (cuerpo.image) {
-      return Promise.resolve(jsonResp({ text: 'Sin internet no puedo ver fotos. Escribe el ejercicio con texto, o conéctate a internet para usar la foto.' }));
-    }
-    var trabajo = cargarOffline().then(function (P) {
-      var sistema = P.sistema +
-        (cuerpo.studentName ? ' El estudiante se llama ' + cuerpo.studentName + '.' : '') +
-        (cuerpo.area ? ' El tema actual es: ' + cuerpo.area + '.' : '');
-      var msgs = [{ role: 'system', content: sistema }];
-      (cuerpo.history || []).filter(function (t) { return t && t.text; }).slice(-6).forEach(function (t) {
-        msgs.push({ role: t.role === 'model' ? 'assistant' : 'user', content: t.text });
-      });
-      msgs.push({ role: 'user', content: cuerpo.message || '' });
-      return P.responder(msgs, 700);
-    }).then(function (texto) {
-      return jsonResp({ text: texto || 'No pude generar una respuesta. Intenta de nuevo.' });
-    }).catch(function () {
-      return jsonResp({ error: 'local_failed' }, 500);
-    });
-    return conAbort(trabajo, init && init.signal);
-  }
-
-  function puedeUsarLocal() { return estado.premium && modeloListoLocal(); }
-
-  var fetchPrevio = window.fetch.bind(window);
-  window.fetch = function (input, init) {
-    var url = typeof input === 'string' ? input : (input && input.url) || '';
-    if (url.indexOf('/api/chat') === -1 || !init || typeof init.body !== 'string') return fetchPrevio(input, init);
-    var cuerpo;
-    try { cuerpo = JSON.parse(init.body); } catch (e) { return fetchPrevio(input, init); }
-    // La respuesta fija del creador sigue su camino normal
-    if (window.__pimathEsPreguntaCreador && window.__pimathEsPreguntaCreador(cuerpo.message)) return fetchPrevio(input, init);
-    if (navigator.onLine === false && puedeUsarLocal()) return respuestaLocal(cuerpo, init);
-    return fetchPrevio(input, init).catch(function (err) {
-      if (err && err.name === 'AbortError') throw err;
-      if (puedeUsarLocal()) return respuestaLocal(cuerpo, init);
-      throw err;
-    });
-  };
-
-  function iniciar() {
-    var chip = document.getElementById('premiumChip');
-    if (chip) {
-      pintarChip();
-      // En fase de captura para reemplazar el aviso "Premium está en desarrollo"
-      chip.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        abrirModal();
-      }, true);
-    }
-    var u = usuario();
-    if (u && u.email) {
-      var c = leerCache();
-      if (c && c.email === u.email.toLowerCase().trim() || (c && c.email === u.email)) estado = { email: u.email, premium: !!c.premium };
-      pintarChip();
-      verificar(u.email);
-    }
-    // Detectar cuando alguien inicia o cierra sesión
-    setInterval(function () {
-      var x = usuario();
-      var mail = x && x.email ? x.email : '';
-      if (mail !== estado.email) verificar(mail);
-    }, 2500);
-    window.addEventListener('online', function () {
-      var x = usuario();
-      if (x && x.email) verificar(x.email);
-    });
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
-  else iniciar();
-})();
+          boton.o
