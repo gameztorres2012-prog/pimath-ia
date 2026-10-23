@@ -1,20 +1,34 @@
 // Service Worker de Pimath IA
-// Cachea el "esqueleto" de la app (HTML, íconos) para que se pueda instalar
-// y abrir rápido. NUNCA cachea /api/chat (las respuestas de la IA deben ser
-// siempre frescas, nunca repetidas desde caché).
+// - Guarda el "esqueleto" de la app (HTML, estilos, scripts, íconos) para abrir rápido y sin internet.
+// - Guarda las librerías externas (KaTeX, fuentes y el motor del modo sin internet).
+// - NUNCA guarda /api/ (las respuestas de la IA deben ser siempre frescas).
+// - NO borra la caché del modelo de IA del modo sin internet (la maneja transformers.js).
 
-const CACHE_NAME = 'pimath-ia-v1';
+const CACHE_NAME = 'pimath-ia-v2';
+const CDN_CACHE = 'pimath-ia-cdn-v1';
+const CDN_HOSTS = [
+  'cdn.jsdelivr.net',
+  'cdnjs.cloudflare.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
+];
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/gemini-barra.css',
+  '/scroll-fix.js',
+  '/offline-ia.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      // Si algún archivo no existe todavía, no se cancela la instalación
+      Promise.all(APP_SHELL.map((url) => cache.add(url).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });
@@ -23,7 +37,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
-        names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
+        names
+          // Solo borra cachés viejas de Pimath; nunca la del modelo de IA
+          .filter((n) => n.startsWith('pimath-ia-') && n !== CACHE_NAME && n !== CDN_CACHE)
+          .map((n) => caches.delete(n))
       )
     )
   );
@@ -32,15 +49,34 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  if (request.method !== 'GET') return;
+
+  let url;
+  try { url = new URL(request.url); } catch (e) { return; }
 
   // Nunca interceptar llamadas a la API: siempre deben ir a la red, en vivo.
-  if (request.url.includes('/api/')) {
+  if (url.pathname.startsWith('/api/')) return;
+
+  // Librerías externas (KaTeX, fuentes, motor de IA): primero la copia guardada
+  if (CDN_HOSTS.includes(url.hostname)) {
+    event.respondWith(
+      caches.open(CDN_CACHE).then((cache) =>
+        cache.match(request).then((hit) => {
+          if (hit) return hit;
+          return fetch(request).then((response) => {
+            if (response && (response.status === 200 || response.type === 'opaque')) {
+              cache.put(request, response.clone()).catch(() => {});
+            }
+            return response;
+          });
+        })
+      )
+    );
     return;
   }
-  // Solo cachear peticiones GET de nuestro propio origen.
-  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
-    return;
-  }
+
+  // Archivos propios de Pimath
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     caches.match(request).then((cached) => {
