@@ -1,7 +1,7 @@
 // Pimath IA - verificación de Premium (activación manual por correo)
 // Para activar a un usuario: agrega su correo de Google a esta lista, entre comillas simples y con coma.
 const PREMIUM = [
-  'ejemplo@gmail.com',
+  'gameztorres2012@gmail.com',
 ];
 
 module.exports = (req, res) => {
