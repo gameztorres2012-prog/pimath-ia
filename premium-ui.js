@@ -2,10 +2,12 @@
 (function () {
   // Completa estos datos (déjalos vacíos '' si no quieres mostrarlos):
   var CONFIG = {
-    precio: '',    // Ej: '$15.000 COP'
-    nequi: '',     // Ej: '300 123 4567'
-    efecty: '',    // Ej: 'Giro a nombre de Juan Pérez, cédula 123456789'
-    correo: '',    // Correo donde te llegan los comprobantes
+    precio: '$5.000 COP (pesos colombianos)',
+    metodos: ['Nequi', 'PayPal', 'Efecty'],  // Formas de pago que se muestran
+    nequi: '',     // Cuando quieras, escribe aquí tu número. Ej: '300 123 4567'
+    paypal: '',    // Cuando quieras, escribe aquí tu usuario o correo de PayPal
+    efecty: '',    // Cuando quieras, escribe aquí los datos del giro
+    correo: 'pimathia.com@gmail.com',  // Correo donde te llegan los comprobantes
     whatsapp: '',  // Opcional, solo números con indicativo. Ej: '573001234567'
     // Lo que obtiene el usuario con Premium (puedes agregar o quitar líneas):
     beneficios: [
@@ -142,8 +144,20 @@
       pasos.appendChild(el('p', 'margin:0 0 4px;font-weight:600;', '1. Paga'));
       var hayPago = false;
       if (CONFIG.nequi) { pasos.appendChild(el('p', 'margin:0 0 4px;', 'Nequi: ' + CONFIG.nequi)); hayPago = true; }
+      if (CONFIG.paypal) { pasos.appendChild(el('p', 'margin:0 0 4px;', 'PayPal: ' + CONFIG.paypal)); hayPago = true; }
       if (CONFIG.efecty) { pasos.appendChild(el('p', 'margin:0 0 4px;', 'Efecty: ' + CONFIG.efecty)); hayPago = true; }
-      if (!hayPago) pasos.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;', 'Escríbenos para coordinar el pago.'));
+      if (!hayPago) {
+        var metodos = (CONFIG.metodos || []).join(', ').replace(/, ([^,]*)$/, ' o $1');
+        pasos.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;',
+          (metodos ? 'Puedes pagar por ' + metodos + '. ' : '') +
+          (CONFIG.correo ? 'Pide los datos de pago por correo y te los enviamos.' : 'Escríbenos para coordinar el pago.')));
+        if (CONFIG.correo) {
+          var pedir = el('a', 'display:block;padding:10px;border-radius:12px;background:#F1ECDD;color:#1C2620;font-weight:600;text-align:center;text-decoration:none;margin-top:6px;', 'Pedir datos de pago por correo');
+          pedir.href = 'mailto:' + CONFIG.correo + '?subject=' + encodeURIComponent('Quiero Pimath Premium') +
+            '&body=' + encodeURIComponent('Hola, quiero Pimath Premium. Mi correo de Pimath es: ' + u.email + '. ¿Me envían los datos para pagar por ' + (metodos || 'Nequi, PayPal o Efecty') + '?');
+          pasos.appendChild(pedir);
+        }
+      }
       pasos.appendChild(el('p', 'margin:10px 0 4px;font-weight:600;', '2. Envía el comprobante'));
       pasos.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;', 'Incluye este correo para activarte: ' + u.email));
       pasos.appendChild(el('p', 'margin:10px 0 0;font-weight:600;', '3. Te activamos Premium'));
