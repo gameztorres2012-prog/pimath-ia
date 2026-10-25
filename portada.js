@@ -47,7 +47,7 @@
     s.textContent =
       '#chat.pm-portada > .msg{display:none !important;}' +
       '#pmPortada{margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:24px;max-width:560px;animation:pmFade .5s ease;}' +
-      '#pmPortada img{width:64px;height:64px;object-fit:contain;mix-blend-mode:multiply;background:none;border:0;box-shadow:none;}' +
+      '#pmPortada img{width:84px;height:84px;object-fit:contain;mix-blend-mode:multiply;background:none;border:0;box-shadow:none;}' +
       '#pmPortada p{margin:0;font-family:var(--font-body,system-ui,sans-serif);font-size:1rem;color:#5E6B62;}' +
       '#pmPortada h1{margin:0;font-family:var(--font-display,Georgia,serif);font-weight:500;font-size:1.75rem;line-height:1.25;color:#1C2620;}' +
       '#chat.pm-portada.pm-fondo{background-image:linear-gradient(rgba(250,250,247,.6),rgba(250,250,247,.6)),var(--pm-fondo);background-size:cover;background-position:center;}' +
