@@ -224,9 +224,11 @@
 
 // ===== Carga del panel Premium (va en un archivo aparte para que cada archivo sea liviano) =====
 (function () {
-  var s = document.createElement('script');
-  s.src = '/premium-ui.js';
-  s.defer = true;
-  (document.head || document.documentElement).appendChild(s);
+  ['/premium-ui.js', '/portada.js'].forEach(function (src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  });
 })();
 // FIN scroll-fix.js
