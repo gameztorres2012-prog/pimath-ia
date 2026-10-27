@@ -3,5 +3,12 @@
   "subfrase": "",
   "icono": "/icon-192.png",
   "fondo": "",
-  "eventos": []
+  "eventos": [
+    {
+      "desde": "10-27",
+      "hasta": "10-29",
+      "frase": "🎉 ¡Feliz cumpleaños, Inedepsa! 🎉",
+      "subfrase": "55 años formando sueños y construyendo futuro 🎂🎈"
+    }
+  ]
 }
