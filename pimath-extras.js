@@ -286,24 +286,33 @@
     window.hablarTexto = nuevo;
   }
 
-  // ---- Chips en la barra de temas ----
+  // ---- Barra de herramientas (propia; la fila de temas de Pimath está oculta) ----
   function crearChips() {
-    var cont = document.getElementById('areas');
-    if (!cont || cont.querySelector('.pimx')) return;
+    if (document.getElementById('pxHerramientas')) return;
+    var cont = document.createElement('div');
+    cont.id = 'pxHerramientas';
+    cont.style.cssText = 'display:flex;gap:8px;overflow-x:auto;padding:8px 16px;max-width:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;';
     [['🎯 Practicar', abrirPractica], ['✏️ Pizarra', abrirPizarra], ['📊 Progreso', abrirProgreso], ['🌐 Idioma', abrirIdioma]].forEach(function (x) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'area-chip pimx';
+      b.style.cssText = 'flex:none;white-space:nowrap;';
       b.textContent = x[0];
       b.addEventListener('click', x[1]);
       cont.appendChild(b);
     });
+    var ref = document.getElementById('areas');
+    if (ref && ref.parentNode) ref.parentNode.insertBefore(cont, ref.nextSibling);
+    else {
+      var chat = document.getElementById('chat');
+      if (chat && chat.parentNode) chat.parentNode.insertBefore(cont, chat);
+    }
   }
 
   function iniciar() {
     var n = 0;
     (function esperar() {
-      if (document.getElementById('areas') && document.getElementById('input')) { crearChips(); enganchar(); }
+      if (document.getElementById('chat') && document.getElementById('input')) { crearChips(); enganchar(); }
       else if (++n < 50) setTimeout(esperar, 200);
     })();
   }
