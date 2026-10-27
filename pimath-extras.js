@@ -297,43 +297,74 @@
       '.msg.user{background:linear-gradient(135deg,#C98B2B 0%,#E3AC45 100%)!important;color:#fff!important;border:none!important;border-radius:22px 22px 6px 22px!important;box-shadow:0 8px 20px rgba(184,121,30,.30)!important;padding:12px 18px!important}',
       '.msg.user *{color:#fff!important}',
       '.msg.bot:not(.thinking){background:#fff!important;border:1px solid #EFE6D2!important;border-radius:22px 22px 22px 6px!important;box-shadow:0 8px 22px rgba(28,38,32,.09)!important;padding:14px 18px!important}',
+      '#sidebar{background:#FAF8F2!important;padding:0!important;padding-top:env(safe-area-inset-top,0px)!important;width:84%!important;max-width:320px!important}',
+      '#sidebarHeader{padding:22px 22px 10px!important;margin:0!important}',
+      '#sidebarHeader h3{font-family:var(--font-display,Georgia,serif)!important;font-size:1.75rem!important;font-weight:700!important;letter-spacing:-.2px}',
+      '#sidebarClose{font-size:1.1rem!important;padding:6px!important}',
+      '#pxMenuLat{padding:6px 12px 2px}',
+      '.pxm-item{display:flex;align-items:center;gap:18px;width:100%;padding:15px 12px;border:none;background:none;border-radius:12px;font:inherit;font-size:1.08rem;color:#1C2620;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}',
+      '.pxm-item:active{background:#EFE9DA}',
+      '.pxm-item svg{width:25px;height:25px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}',
+      '.pxm-voz svg{stroke:#2B5BFF}',
+      '#pxSep{height:1px;background:#E4DCC8;margin:10px 24px 4px}',
+      '#sidebarNewChat{margin:4px 24px 12px!important;width:calc(100% - 48px)!important}',
+      '#pxRec{padding:12px 24px 6px;font-size:.92rem;color:#7A857D;font-weight:500}',
+      '#historyList{padding:0 12px!important}',
+      '.history-item{border-bottom:none!important;border-radius:12px!important;padding:13px 12px!important;font-size:1.02rem!important;gap:12px!important}',
+      '.history-item::before{content:"";width:19px;height:19px;flex:none;opacity:.75;background:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%231C2620\' stroke-width=\'1.8\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z\'/%3E%3C/svg%3E") no-repeat center/contain}',
+      '.history-item.active{background:#F1ECDD!important}',
       '#pxHerramientas .pimx{padding:8px 16px;border-radius:999px;font-weight:600}',
       '#pxHerramientas .pimx-hablar{background:linear-gradient(135deg,#46A8FF,#2B5BFF)!important;color:#fff!important;border:none!important;box-shadow:0 6px 16px rgba(43,91,255,.35)}'
     ].join('');
     document.head.appendChild(st);
   }
 
-  // ---- Barra de herramientas (propia; la fila de temas de Pimath está oculta) ----
-  function crearChips() {
-    if (document.getElementById('pxHerramientas')) return;
-    estilos();
-    var cont = document.createElement('div');
-    cont.id = 'pxHerramientas';
-    cont.style.cssText = 'display:flex;gap:8px;overflow-x:auto;padding:8px 16px;max-width:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;';
-    var lista = [];
-    if (window.__pimathAbrirVoz) lista.push(['Hablar', function () { window.__pimathAbrirVoz(); }, 'pimx-hablar']);
-    lista.push(['Practicar', abrirPractica], ['Pizarra', abrirPizarra], ['Progreso', abrirProgreso], ['Idioma', abrirIdioma]);
-    lista.forEach(function (x) {
+  // ---- Menú lateral estilo Claude: opciones + recientes + Nuevo chat ----
+  var ICONOS = {
+    voz: '<path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/>',
+    practicar: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>',
+    pizarra: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    progreso: '<path d="M5 20V11M12 20V4M19 20v-6"/>',
+    idioma: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>'
+  };
+  function svg(k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONOS[k] + '</svg>'; }
+
+  function cerrarMenu() { try { if (typeof closeSidebar === 'function') closeSidebar(); } catch (e) {} }
+
+  function menuLateral() {
+    var sb = document.getElementById('sidebar');
+    var nuevo = document.getElementById('sidebarNewChat');
+    var lista = document.getElementById('historyList');
+    if (!sb || !nuevo || !lista || document.getElementById('pxMenuLat')) return;
+    var h3 = sb.querySelector('#sidebarHeader h3');
+    if (h3) h3.textContent = 'Pimath IA';
+
+    var items = [];
+    if (window.__pimathAbrirVoz) items.push(['Hablar', 'voz', function () { window.__pimathAbrirVoz(); }]);
+    items.push(['Practicar', 'practicar', abrirPractica], ['Pizarra', 'pizarra', abrirPizarra],
+               ['Progreso', 'progreso', abrirProgreso], ['Idioma', 'idioma', abrirIdioma]);
+
+    var nav = document.createElement('nav');
+    nav.id = 'pxMenuLat';
+    items.forEach(function (x) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'area-chip pimx' + (x[2] ? ' ' + x[2] : '');
-      b.style.cssText = 'flex:none;white-space:nowrap;';
-      b.textContent = x[0];
-      b.addEventListener('click', x[1]);
-      cont.appendChild(b);
+      b.className = 'pxm-item' + (x[1] === 'voz' ? ' pxm-voz' : '');
+      b.innerHTML = svg(x[1]) + '<span>' + x[0] + '</span>';
+      b.addEventListener('click', function () { cerrarMenu(); setTimeout(x[2], 180); });
+      nav.appendChild(b);
     });
-    var ref = document.getElementById('areas');
-    if (ref && ref.parentNode) ref.parentNode.insertBefore(cont, ref.nextSibling);
-    else {
-      var chat = document.getElementById('chat');
-      if (chat && chat.parentNode) chat.parentNode.insertBefore(cont, chat);
-    }
+    var sep = document.createElement('div'); sep.id = 'pxSep';
+    var rec = document.createElement('div'); rec.id = 'pxRec'; rec.textContent = 'Historial';
+    sb.insertBefore(nav, nuevo);
+    sb.insertBefore(sep, nuevo);
+    sb.insertBefore(rec, nuevo);
   }
 
   function iniciar() {
     var n = 0;
     (function esperar() {
-      if (document.getElementById('chat') && document.getElementById('input')) { crearChips(); enganchar(); }
+      if (document.getElementById('chat') && document.getElementById('input') && document.getElementById('sidebar')) { estilos(); menuLateral(); enganchar(); }
       else if (++n < 50) setTimeout(esperar, 200);
     })();
   }
