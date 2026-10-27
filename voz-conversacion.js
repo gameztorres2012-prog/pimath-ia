@@ -30,25 +30,34 @@
 
   // ---------- Interfaz ----------
   function crearUI() {
+    var css = [
+      '#vozOverlay{position:fixed;inset:0;z-index:95;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(28px + env(safe-area-inset-top,0px)) 20px calc(28px + env(safe-area-inset-bottom,0px));background:radial-gradient(circle at 50% 42%,#10286b 0%,#081544 45%,#040a22 100%);color:#fff;font-family:var(--font-body,system-ui,sans-serif);text-align:center;overflow:hidden}',
+      '#vozOverlay.on{display:flex}',
+      '#vozTitulo{font-size:1.02rem;opacity:.75;letter-spacing:.3px}',
+      '#vozCentro{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}',
+      '#vozOrbe{position:relative;width:230px;height:230px;border:none;background:none;padding:0;cursor:pointer;transition:transform .09s linear;-webkit-tap-highlight-color:transparent}',
+      '#vozOrbe span{position:absolute;display:block;pointer-events:none}',
+      '.vo-halo{inset:-36px;border-radius:50%;background:radial-gradient(circle,rgba(70,160,255,.55) 0%,rgba(70,160,255,.18) 45%,rgba(70,160,255,0) 70%);animation:voRespira 3.4s ease-in-out infinite}',
+      '.vo-core{inset:20px;background:radial-gradient(circle at 32% 28%,#bff0ff 0%,#4fb4ff 28%,#2b63ff 62%,#1b2fc9 100%);box-shadow:0 0 70px 14px rgba(60,150,255,.55),inset 0 -14px 34px rgba(10,20,120,.55);border-radius:60% 40% 55% 45%/55% 45% 60% 40%;animation:voMorph 7s ease-in-out infinite,voGiro 16s linear infinite}',
+      '.vo-brillo{inset:46px 70px 120px 56px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75) 0%,rgba(255,255,255,0) 70%);filter:blur(3px);animation:voRespira 3.4s ease-in-out infinite}',
+      '#vozOverlay.escuchando #vozOrbe::after{content:"";position:absolute;inset:26px;border-radius:50%;animation:voOnda 1.9s ease-out infinite}',
+      '#vozOverlay.escuchando .vo-core{animation-duration:5s,12s}',
+      '#vozOverlay.hablando .vo-core{animation-duration:2.4s,7s}',
+      '#vozOverlay.hablando .vo-halo{animation-duration:1.2s}',
+      '#vozOverlay.pensando .vo-core{animation-duration:2.6s,3.2s;filter:hue-rotate(28deg) brightness(1.08)}',
+      '#vozOverlay.pausa .vo-core{opacity:.5;animation-play-state:paused}',
+      '#vozOverlay.pausa .vo-halo{opacity:.4}',
+      '@keyframes voMorph{0%,100%{border-radius:60% 40% 55% 45%/55% 45% 60% 40%}25%{border-radius:45% 55% 40% 60%/60% 40% 55% 45%}50%{border-radius:55% 45% 60% 40%/45% 60% 40% 55%}75%{border-radius:40% 60% 45% 55%/55% 45% 50% 50%}}',
+      '@keyframes voGiro{to{transform:rotate(360deg)}}',
+      '@keyframes voRespira{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.09);opacity:1}}',
+      '@keyframes voOnda{0%{box-shadow:0 0 0 0 rgba(90,175,255,.5)}100%{box-shadow:0 0 0 52px rgba(90,175,255,0)}}',
+      '#vozEstado{font-size:1.4rem;font-weight:600;margin:34px 0 0}',
+      '#vozAyuda{font-size:.9rem;opacity:.65;margin:6px 0 0}',
+      '#vozTexto{max-width:520px;min-height:3.6em;max-height:28vh;overflow:auto;font-size:1rem;line-height:1.45;opacity:.88;margin-top:16px}',
+      '#vozFin{background:rgba(255,255,255,.95);color:#081544;border:none;border-radius:999px;padding:13px 36px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}'
+    ].join('');
     var st = document.createElement('style');
-    st.textContent =
-      '#vozBtn{flex-shrink:0;width:42px;height:42px;border-radius:10px;border:1px solid var(--line,#E4DCC8);background:var(--panel-2,#F6F1E3);color:var(--ink,#1C2620);font-size:1.1rem;cursor:pointer}' +
-      '#vozOverlay{position:fixed;inset:0;z-index:95;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(28px + env(safe-area-inset-top,0px)) 20px calc(28px + env(safe-area-inset-bottom,0px));background:radial-gradient(circle at 50% 35%,#2C3A31 0%,#1C2620 70%);color:#fff;font-family:var(--font-body,system-ui,sans-serif);text-align:center}' +
-      '#vozOverlay.on{display:flex}' +
-      '#vozTitulo{font-size:1.05rem;opacity:.8;letter-spacing:.3px}' +
-      '#vozOrbe{width:190px;height:190px;border-radius:50%;border:none;cursor:pointer;background:radial-gradient(circle at 35% 30%,#E8B65A,#B8791E 70%);box-shadow:0 0 0 0 rgba(184,121,30,.5);display:flex;align-items:center;justify-content:center;transition:transform .2s}' +
-      '#vozOrbe img{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#fff}' +
-      '#vozOverlay.escuchando #vozOrbe{animation:vozLatido 1.4s ease-in-out infinite}' +
-      '#vozOverlay.hablando #vozOrbe{animation:vozHabla .7s ease-in-out infinite}' +
-      '#vozOverlay.pensando #vozOrbe{animation:vozGira 1.2s linear infinite;opacity:.8}' +
-      '#vozOverlay.pausa #vozOrbe{opacity:.55}' +
-      '@keyframes vozLatido{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(184,121,30,.45)}50%{transform:scale(1.05);box-shadow:0 0 0 28px rgba(184,121,30,0)}}' +
-      '@keyframes vozHabla{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}' +
-      '@keyframes vozGira{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}' +
-      '#vozEstado{font-size:1.35rem;font-weight:600;margin:0}' +
-      '#vozAyuda{font-size:.9rem;opacity:.7;margin:6px 0 0}' +
-      '#vozTexto{max-width:520px;min-height:3.6em;max-height:30vh;overflow:auto;font-size:1rem;line-height:1.45;opacity:.9;margin-top:14px}' +
-      '#vozFin{background:#fff;color:#1C2620;border:none;border-radius:999px;padding:13px 34px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}';
+    st.textContent = css;
     document.head.appendChild(st);
 
     var ov = document.createElement('div');
@@ -57,8 +66,8 @@
     ov.setAttribute('aria-label', 'Conversación por voz con Pimath IA');
     ov.innerHTML =
       '<div id="vozTitulo">Conversación con Pimath IA</div>' +
-      '<div>' +
-        '<button id="vozOrbe" type="button" aria-label="Hablar o interrumpir"><img src="/icon-192.png" alt=""></button>' +
+      '<div id="vozCentro">' +
+        '<button id="vozOrbe" type="button" aria-label="Hablar o interrumpir"><span class="vo-halo"></span><span class="vo-core"></span><span class="vo-brillo"></span></button>' +
         '<p id="vozEstado"></p><p id="vozAyuda"></p>' +
         '<div id="vozTexto"></div>' +
       '</div>' +
@@ -70,23 +79,8 @@
     ui.ayuda = ov.querySelector('#vozAyuda');
     ui.texto = ov.querySelector('#vozTexto');
     ui.orbe = ov.querySelector('#vozOrbe');
-
     ui.orbe.addEventListener('click', tocarOrbe);
     ov.querySelector('#vozFin').addEventListener('click', cerrar);
-
-    var btn = document.createElement('button');
-    btn.id = 'vozBtn';
-    btn.type = 'button';
-    btn.title = 'Conversar con Pimath por voz';
-    btn.setAttribute('aria-label', 'Conversar con Pimath por voz');
-    btn.textContent = '🗣️';
-    btn.addEventListener('click', abrir);
-    var mic = document.getElementById('micBtn');
-    if (mic && mic.parentNode) mic.parentNode.insertBefore(btn, mic.nextSibling);
-    else {
-      var fila = document.getElementById('row') || document.getElementById('composer');
-      if (fila) fila.appendChild(btn);
-    }
   }
 
   function pintar(subtitulo) {
@@ -123,7 +117,11 @@
     activo = false;
     esperando = false;
     idHabla++;
+    idPregunta++;
+    try { if (ctlVoz) ctlVoz.abort(); } catch (e) {}
+    vozTurnos = [];
     pararAudio();
+    ponerNivel(0);
     clearTimeout(timerEspera);
     try { if (rec) { rec.onend = null; rec.abort(); } } catch (e) {}
     try { window.speechSynthesis.cancel(); } catch (e) {}
@@ -190,7 +188,11 @@
     catch (e) { setTimeout(escuchar, 500); }
   }
 
-  // ---------- Enviar al chat ----------
+  // ---------- Preguntar a Pimath (la conversación de voz no se muestra en el chat) ----------
+  var vozTurnos = [];   // memoria solo de esta conversación de voz
+  var ctlVoz = null;
+  var idPregunta = 0;
+
   function enviar(texto) {
     silencios = 0;
     var n = normalizar(texto);
@@ -199,24 +201,37 @@
       return;
     }
     estado = 'pensando';
-    esperando = true;
     pintar(texto);
-    try {
-      var campo = document.getElementById('input');
-      campo.value = texto;
-      campo.dispatchEvent(new Event('input', { bubbles: true }));
-      if (typeof send === 'function') send();
-      else document.getElementById('sendBtn').click();
-    } catch (e) {
-      esperando = false;
-      escuchar();
-      return;
-    }
-    // Si algo falla y nunca llega respuesta, volvemos a escuchar
-    clearTimeout(timerEspera);
-    timerEspera = setTimeout(function () {
-      if (activo && esperando) { esperando = false; escuchar(); }
-    }, 60000);
+    var mia = ++idPregunta;
+    try { if (ctlVoz) ctlVoz.abort(); } catch (e) {}
+    ctlVoz = new AbortController();
+    var cuerpo = {
+      history: vozTurnos.slice(-12),
+      message: texto,
+      image: null,
+      studentName: (typeof studentName !== 'undefined' ? studentName : ''),
+      area: (typeof currentArea !== 'undefined' ? currentArea : '')
+    };
+    fetch('/api/chat', {
+      method: 'POST',
+      signal: ctlVoz.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error(d.error || ('http_' + r.status));
+        return d;
+      });
+    }).then(function (d) {
+      if (!activo || mia !== idPregunta) return;
+      var full = d.text || '';
+      vozTurnos.push({ role: 'user', text: texto });
+      vozTurnos.push({ role: 'model', text: full });
+      hablar(full || 'No pude generar una respuesta. Intentemos de nuevo.');
+    }).catch(function (e) {
+      if (!activo || mia !== idPregunta || (e && e.name === 'AbortError')) return;
+      hablar('No pude conectarme. Revisa tu internet e intentemos de nuevo.');
+    });
   }
 
   // ---------- Hablar ----------
@@ -261,16 +276,38 @@
   }
 
   // ---------- Voz natural (Gemini TTS vía /api/tts) con respaldo a la voz del celular ----------
-  var ctxAudio = null, fuente = null, hablandoIA = false;
+  var ctxAudio = null, fuente = null, hablandoIA = false, analizador = null, datosAn = null, rafNivel = null, nivelSuave = 0;
 
   function ttsCfg() { return (window.__pimathTTSConfig && window.__pimathTTSConfig()) || { on: false }; }
 
   function audioListo() {
     try {
-      if (!ctxAudio) { var AC = window.AudioContext || window.webkitAudioContext; ctxAudio = new AC(); }
+      if (!ctxAudio) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        ctxAudio = new AC();
+        analizador = ctxAudio.createAnalyser();
+        analizador.fftSize = 256;
+        datosAn = new Uint8Array(analizador.fftSize);
+        analizador.connect(ctxAudio.destination);
+      }
       if (ctxAudio.state === 'suspended') ctxAudio.resume();
     } catch (e) { ctxAudio = null; }
     return !!ctxAudio;
+  }
+
+  function ponerNivel(n) {
+    if (ui.orbe) ui.orbe.style.transform = n > 0.02 ? 'scale(' + (1 + n * 0.32).toFixed(3) + ')' : '';
+  }
+
+  function medirNivel() {
+    if (!analizador || !activo || !fuente) { rafNivel = null; nivelSuave = 0; ponerNivel(0); return; }
+    analizador.getByteTimeDomainData(datosAn);
+    var suma = 0;
+    for (var i = 0; i < datosAn.length; i++) { var v = (datosAn[i] - 128) / 128; suma += v * v; }
+    var rms = Math.sqrt(suma / datosAn.length);
+    nivelSuave = nivelSuave * 0.6 + Math.min(1, rms * 4.5) * 0.4;
+    ponerNivel(nivelSuave);
+    rafNivel = requestAnimationFrame(medirNivel);
   }
 
   function pararAudio() {
@@ -363,9 +400,10 @@
         var b = pcmABuffer(dato.audio, dato.rate);
         fuente = ctxAudio.createBufferSource();
         fuente.buffer = b;
-        fuente.connect(ctxAudio.destination);
+        fuente.connect(analizador);
         fuente.onended = function () { reproducir(i + 1); };
         fuente.start();
+        if (activo && !rafNivel) medirNivel();
       }).catch(function () {
         if (mi !== idHabla) return;
         hablandoIA = false;
@@ -414,49 +452,11 @@
     hablarNavegador(trozos(limpio), mi, terminar);
   }
 
-  // ---------- Enganche con el chat de Pimath ----------
-  function engancharChat() {
-    // 1) Camino principal: cuando el chat agrega el botón "Escuchar" a la respuesta final
-    var original = window.addSpeakBtn;
-    if (typeof original === 'function') {
-      window.addSpeakBtn = function (div, text) {
-        var r = original.apply(this, arguments);
-        if (activo && esperando) hablar(text || (div && div.textContent) || '');
-        return r;
-      };
-    }
-    // 2) Respaldo: si la respuesta llega sin ese botón (por ejemplo, un error), la leemos igual
-    var chat = document.getElementById('chat');
-    if (!chat) return;
-    new MutationObserver(function (cambios) {
-      cambios.forEach(function (c) {
-        var el = c.target;
-        if (c.attributeName === 'class' && el.classList && el.classList.contains('bot') &&
-            !el.classList.contains('thinking') && (c.oldValue || '').indexOf('thinking') !== -1) {
-          setTimeout(function () {
-            if (activo && esperando) {
-              var clon = el.cloneNode(true);
-              Array.prototype.forEach.call(clon.querySelectorAll('button,img,.katex-html'), function (n) { n.remove(); });
-              hablar(clon.textContent || '');
-            }
-          }, 900);
-        }
-      });
-    }).observe(chat, { attributes: true, attributeFilter: ['class'], attributeOldValue: true, subtree: true });
-  }
-
   window.__pimathVozActiva = function () { return activo; };
+  window.__pimathAbrirVoz = function () { abrir(); };
   document.addEventListener('visibilitychange', function () { if (document.hidden && activo) cerrar(); });
 
-  // ---------- Inicio (espera a que el chat esté listo) ----------
-  function iniciar() {
-    var intentos = 0;
-    (function esperar() {
-      var listo = document.getElementById('input') && document.getElementById('chat') && typeof window.addSpeakBtn === 'function';
-      if (listo) { crearUI(); engancharChat(); }
-      else if (++intentos < 50) setTimeout(esperar, 200);
-    })();
-  }
+  function iniciar() { crearUI(); }
   if (document.readyState === 'complete') iniciar();
   else window.addEventListener('load', iniciar);
 })();

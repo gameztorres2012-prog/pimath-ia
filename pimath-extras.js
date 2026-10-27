@@ -103,7 +103,7 @@
   // ---- 🎯 Practicar ----
   function abrirPractica() {
     var nivel = 'fácil', tema = (typeof currentArea !== 'undefined' && currentArea) ? currentArea : 'cualquier tema de matemáticas';
-    hoja('🎯 Practicar', function (card, cerrar) {
+    hoja('Practicar', function (card, cerrar) {
       card.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;', 'Pimath te pone ejercicios uno por uno y te corrige.'));
       card.appendChild(el('p', 'margin:10px 0 2px;font-weight:600;', 'Nivel'));
       opciones(card, [['fácil', 'Fácil'], ['medio', 'Medio'], ['difícil', 'Difícil']], nivel, function (v) { nivel = v; });
@@ -133,7 +133,7 @@
     btn('⚫', function () { color = '#111'; grosor = 3; });
     btn('🔵', function () { color = '#1565C0'; grosor = 3; });
     btn('🔴', function () { color = '#C62828'; grosor = 3; });
-    btn('🧽', function () { color = '#fff'; grosor = 22; });
+    btn('Borrador', function () { color = '#fff'; grosor = 22; });
     btn('Limpiar', function () { var c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height); });
     var sp = el('span', 'flex:1;'); barra.appendChild(sp);
     btn('Cancelar', function () { ov.remove(); });
@@ -188,9 +188,9 @@
     var d = new Date();
     for (i = 0; i < 7; i++) { sem += datos.dias[hoy(d)] || 0; d.setDate(d.getDate() - 1); }
     var temas = Object.keys(datos.areas).sort(function (a, b) { return datos.areas[b] - datos.areas[a]; });
-    hoja('📊 Mi progreso', function (card) {
+    hoja('Mi progreso', function (card) {
       var fila = el('div', 'display:flex;gap:8px;margin:6px 0 12px;');
-      [['🔥 ' + racha(), 'días seguidos'], [String(sem), 'preguntas esta semana'], [String(datos.practicas), 'prácticas']].forEach(function (x) {
+      [[String(racha()), 'días seguidos'], [String(sem), 'preguntas esta semana'], [String(datos.practicas), 'prácticas']].forEach(function (x) {
         var c = el('div', 'flex:1;background:#FBF8EE;border:1px solid #E4DCC8;border-radius:12px;padding:10px;text-align:center;');
         c.appendChild(el('div', 'font-size:1.3rem;font-weight:700;', x[0]));
         c.appendChild(el('div', 'font-size:.75rem;color:#5E6B62;', x[1]));
@@ -224,7 +224,7 @@
   var MUESTRA = { 'es-ES': 'Hola, soy Pimath, tu profesor de matemáticas.', 'en-US': 'Hi, I am Pimath, your math teacher.', 'pt-BR': 'Olá, eu sou o Pimath, seu professor de matemática.' };
 
   function abrirIdioma() {
-    hoja('🌐 Idioma y voz', function (card) {
+    hoja('Idioma y voz', function (card) {
       card.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;', 'Pimath responderá y hablará en el idioma que elijas.'));
       var zonaVoz = el('div', '');
       function probar() {
@@ -262,7 +262,7 @@
             zonaVoz.appendChild(selector(lista, datos.voz, function (v) { datos.voz = v; guardar(); probar(); }));
           }
         }
-        var pb = el('button', OP + 'margin-top:10px;', '▶ Probar voz'); pb.type = 'button';
+        var pb = el('button', OP + 'margin-top:10px;', 'Probar voz'); pb.type = 'button';
         pb.addEventListener('click', probar);
         zonaVoz.appendChild(pb);
       }
@@ -286,16 +286,37 @@
     window.hablarTexto = nuevo;
   }
 
+  // ---- Estilos: burbujas del chat y botones ----
+  function estilos() {
+    if (document.getElementById('pxEstilos')) return;
+    var st = document.createElement('style');
+    st.id = 'pxEstilos';
+    st.textContent = [
+      '@keyframes pxPop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}',
+      '.msg{animation:pxPop .3s cubic-bezier(.2,.8,.2,1)!important}',
+      '.msg.user{background:linear-gradient(135deg,#C98B2B 0%,#E3AC45 100%)!important;color:#fff!important;border:none!important;border-radius:22px 22px 6px 22px!important;box-shadow:0 8px 20px rgba(184,121,30,.30)!important;padding:12px 18px!important}',
+      '.msg.user *{color:#fff!important}',
+      '.msg.bot:not(.thinking){background:#fff!important;border:1px solid #EFE6D2!important;border-radius:22px 22px 22px 6px!important;box-shadow:0 8px 22px rgba(28,38,32,.09)!important;padding:14px 18px!important}',
+      '#pxHerramientas .pimx{padding:8px 16px;border-radius:999px;font-weight:600}',
+      '#pxHerramientas .pimx-hablar{background:linear-gradient(135deg,#46A8FF,#2B5BFF)!important;color:#fff!important;border:none!important;box-shadow:0 6px 16px rgba(43,91,255,.35)}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+
   // ---- Barra de herramientas (propia; la fila de temas de Pimath está oculta) ----
   function crearChips() {
     if (document.getElementById('pxHerramientas')) return;
+    estilos();
     var cont = document.createElement('div');
     cont.id = 'pxHerramientas';
     cont.style.cssText = 'display:flex;gap:8px;overflow-x:auto;padding:8px 16px;max-width:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;';
-    [['🎯 Practicar', abrirPractica], ['✏️ Pizarra', abrirPizarra], ['📊 Progreso', abrirProgreso], ['🌐 Idioma', abrirIdioma]].forEach(function (x) {
+    var lista = [];
+    if (window.__pimathAbrirVoz) lista.push(['Hablar', function () { window.__pimathAbrirVoz(); }, 'pimx-hablar']);
+    lista.push(['Practicar', abrirPractica], ['Pizarra', abrirPizarra], ['Progreso', abrirProgreso], ['Idioma', abrirIdioma]);
+    lista.forEach(function (x) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'area-chip pimx';
+      b.className = 'area-chip pimx' + (x[2] ? ' ' + x[2] : '');
       b.style.cssText = 'flex:none;white-space:nowrap;';
       b.textContent = x[0];
       b.addEventListener('click', x[1]);
