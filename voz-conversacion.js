@@ -177,7 +177,7 @@
         return;
       }
       silencios++;
-      if (silencios >= 3) {
+      if (silencios >= 2) {
         estado = 'pausa';
         pintar('No te escuché. Toca el círculo cuando quieras hablar.');
         return;
@@ -354,7 +354,18 @@
     }
     texto += extra;
     var partes = texto.match(/[^.!?;:\n]+[.!?;:\n]*/g) || [texto];
-    var salida = [], actual = '';
+    var salida = [];
+    // El primer trozo es corto para que Pimath empiece a hablar cuanto antes
+    var primero = (partes.shift() || '').trim();
+    if (primero.length > 110) {
+      var c = primero.lastIndexOf(',', 110);
+      if (c < 40) c = primero.lastIndexOf(' ', 110);
+      if (c < 40) c = 110;
+      partes.unshift(primero.slice(c + 1));
+      primero = primero.slice(0, c + 1);
+    }
+    if (primero) salida.push(primero);
+    var actual = '';
     partes.forEach(function (p) {
       if ((actual + p).length > 240 && actual) { salida.push(actual); actual = p; }
       else actual += p;
@@ -391,6 +402,7 @@
       }
     }
     hablandoIA = true;
+    for (var k = 0; k < piezas.length && k < 4; k++) pedir(k);
     function reproducir(i) {
       if (mi !== idHabla) return;
       if (i >= piezas.length) { hablandoIA = false; fuente = null; alTerminar(); return; }
