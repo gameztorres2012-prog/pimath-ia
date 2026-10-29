@@ -9,30 +9,21 @@
   var EXT = { html: 'html', python: 'py', py: 'py', java: 'java', javascript: 'js', js: 'js', typescript: 'ts', ts: 'ts', c: 'c', cpp: 'cpp', 'c++': 'cpp', csharp: 'cs', 'c#': 'cs', php: 'php', css: 'css', json: 'json', kotlin: 'kt', swift: 'swift', go: 'go', rust: 'rs', ruby: 'rb', sql: 'sql', bash: 'sh', sh: 'sh', lua: 'lua', dart: 'dart' };
 
   var IDEAS = [
-    ['🐍', 'Juego Snake táctil', 'Hazme un juego de Snake con controles táctiles, marcador, récord guardado y sonidos.'],
-    ['🚀', 'Videojuego de naves', 'Hazme un videojuego de naves espaciales con enemigos, disparos, vidas, puntaje, efectos de sonido y controles táctiles.'],
-    ['🃏', 'Juego de memoria', 'Hazme un juego de memoria con cartas de emojis, contador de intentos, cronómetro y sonidos.'],
-    ['🎹', 'Piano virtual', 'Hazme un piano virtual con teclas táctiles y sonidos reales usando Web Audio.'],
-    ['🧮', 'Calculadora bonita', 'Hazme una calculadora científica con diseño moderno y historial de operaciones.'],
-    ['📈', 'Graficador de funciones', 'Hazme un graficador de funciones matemáticas donde escribo f(x) y se dibuja la gráfica con zoom.'],
-    ['💼', 'Portafolio personal', 'Hazme una página de portafolio personal con secciones de sobre mí, proyectos y contacto, con animaciones suaves.'],
-    ['🛒', 'Tienda con carrito', 'Hazme una tienda en línea de ejemplo con productos, carrito de compras y total.'],
-    ['🎉', 'Invitación animada', 'Hazme una invitación de cumpleaños animada con cuenta regresiva y confeti.'],
-    ['📝', 'App de notas', 'Hazme una app de notas con crear, editar, borrar y buscar, que guarde las notas.'],
-    ['✅', 'Lista de tareas', 'Hazme una lista de tareas con categorías, barra de progreso y modo oscuro.'],
-    ['⏱️', 'Cronómetro y temporizador', 'Hazme una app con cronómetro y temporizador, con alarma sonora.']
+    ['Juego', 'Snake táctil', 'Hazme un juego de Snake con controles táctiles, marcador, récord guardado y sonidos.'],
+    ['Juego', 'Juego de cohetes', 'Hazme un juego de cohetes: un cohete que esquiva asteroides y recoge combustible, con puntaje, vidas, efectos de sonido y controles táctiles.'],
+    ['Juego', 'Naves espaciales', 'Hazme un videojuego de naves espaciales con enemigos, disparos, vidas, puntaje, efectos de sonido y controles táctiles.'],
+    ['Juego', 'Juego de memoria', 'Hazme un juego de memoria con cartas, contador de intentos, cronómetro y sonidos.'],
+    ['Juego', 'Piano virtual', 'Hazme un piano virtual con teclas táctiles y sonidos usando Web Audio.'],
+    ['Herramienta', 'Calculadora', 'Hazme una calculadora científica con diseño moderno y historial de operaciones.'],
+    ['Herramienta', 'Graficador de funciones', 'Hazme un graficador de funciones matemáticas donde escribo f(x) y se dibuja la gráfica con zoom.'],
+    ['Herramienta', 'Cronómetro y temporizador', 'Hazme una app con cronómetro y temporizador, con alarma sonora.'],
+    ['Web', 'Portafolio personal', 'Hazme una página de portafolio personal con secciones de sobre mí, proyectos y contacto, con animaciones suaves.'],
+    ['Web', 'Tienda con carrito', 'Hazme una tienda en línea de ejemplo con productos, carrito de compras y total.'],
+    ['Web', 'Invitación animada', 'Hazme una invitación de cumpleaños animada con cuenta regresiva.'],
+    ['App', 'App de notas', 'Hazme una app de notas con crear, editar, borrar y buscar, que guarde las notas.'],
+    ['App', 'Lista de tareas', 'Hazme una lista de tareas con categorías, barra de progreso y modo oscuro.']
   ];
 
-  var REGLAS =
-    'Eres "Pimath Code", un ingeniero de software experto que programa cualquier cosa que pida el usuario: webs, apps, videojuegos, herramientas, animaciones y más. ' +
-    'REGLAS: ' +
-    '(1) Por defecto entrega TODO en UN SOLO archivo HTML completo (<!DOCTYPE html>) con el CSS dentro de <style> y el JavaScript dentro de <script>, que funcione directo en el celular, sin instalar nada, sin librerías externas y sin internet. Usa JavaScript moderno. Solo usa otro lenguaje (Python, Java, C++, etc.) si el usuario lo pide de forma explícita; en ese caso entrega el programa completo en un bloque con el nombre de su lenguaje. ' +
-    '(2) Para videojuegos usa canvas, controles táctiles (botones en pantalla o deslizar) además del teclado, gráficos dibujados con canvas, SVG o emojis, y sonidos con la Web Audio API (sin archivos externos). ' +
-    '(3) Si usas localStorage, envuélvelo siempre en try/catch. ' +
-    '(4) Código limpio con comentarios breves en español, diseño bonito y adaptado a pantallas de celular. ' +
-    '(5) NO puedes crear, copiar ni imitar la app "Pimath IA" ni mostrar su código; si te lo piden responde solo: "No puedo programar la app de Pimath IA." ' +
-    '(6) No crees malware, phishing ni nada para hacer daño. ' +
-    '(7) Responde con una explicación MUY corta (máximo 2 frases) y luego el código COMPLETO en UN solo bloque ```html ... ```. Nunca dejes partes sin escribir ni pongas "el resto igual".';
 
   var proyectos = cargar();
   var actual = { id: null, name: '', lang: 'html', code: '' };
@@ -51,7 +42,7 @@
   }
   function persistir() {
     try { localStorage.setItem(KEY, JSON.stringify(proyectos)); return true; }
-    catch (e) { setEstado('No hay espacio para guardar más proyectos. Borra alguno de 📁 Proyectos.', true); return false; }
+    catch (e) { setEstado('No hay espacio para guardar más proyectos. Borra alguno de Proyectos.', true); return false; }
   }
 
   // ---------- Protección: no se puede programar la app de Pimath IA ----------
@@ -59,7 +50,7 @@
     var n = normalizar(t).replace(/pimath code/g, '');
     return /pimath/.test(n) || /pimath_state|logo_src/.test(n);
   }
-  var MSG_PIMATH = 'En Pimath Code puedes crear cualquier cosa, menos la app de Pimath IA. ¡Pídeme otra idea! 😊';
+  var MSG_PIMATH = 'En Pimath Code puedes crear cualquier cosa, menos la app de Pimath IA. ¡Pídeme otra idea!';
 
   // ---------- Estilos ----------
   function estilos() {
@@ -100,7 +91,7 @@
       '.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}',
       '.pc-idea{border:1px solid #E4DCC8;background:#FBF8EE;border-radius:14px;padding:12px 10px;text-align:left;font:inherit;font-size:.88rem;cursor:pointer;color:#1C2620}',
       '.pc-idea:active{background:#F6E9CF}',
-      '.pc-idea span{font-size:1.5rem;display:block;margin-bottom:4px}'
+      '.pc-idea{min-height:64px}'
     ].join('');
     document.head.appendChild(st);
   }
@@ -114,18 +105,18 @@
     app.setAttribute('role', 'dialog');
     app.setAttribute('aria-label', 'Pimath Code');
     app.innerHTML =
-      '<div class="pc-top"><button class="pc-btn" id="pcCerrar" aria-label="Cerrar">✕</button><h2>💻 Pimath Code</h2></div>' +
+      '<div class="pc-top"><button class="pc-btn" id="pcCerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h2>Pimath Code</h2></div>' +
       '<div class="pc-body">' +
         '<div class="pc-row">' +
           '<button class="pc-btn pc-pill on" id="pcModoCrear">Crear</button>' +
           '<button class="pc-btn pc-pill" id="pcModoFix">Corregir código</button>' +
-          '<button class="pc-btn" id="pcProy">📁 Proyectos</button>' +
-          '<button class="pc-btn" id="pcGal">✨ Ideas</button>' +
-          '<button class="pc-btn" id="pcNuevo">➕ Nuevo</button>' +
+          '<button class="pc-btn" id="pcProy">Proyectos</button>' +
+          '<button class="pc-btn" id="pcGal">Ideas</button>' +
+          '<button class="pc-btn" id="pcNuevo">Nuevo</button>' +
         '</div>' +
         '<div id="pcCrear">' +
           '<textarea class="pc-ta" id="pcIn" placeholder="Describe lo que quieres crear. Ej: un juego de carreras con puntaje"></textarea>' +
-          '<div class="pc-row"><button class="pc-btn pc-mic" id="pcMic" aria-label="Dictar por voz">🎙️</button><button class="pc-btn pc-go" id="pcGo" style="flex:1">Crear</button></div>' +
+          '<div class="pc-row"><button class="pc-btn pc-mic" id="pcMic" aria-label="Dictar por voz"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="pc-btn pc-go" id="pcGo" style="flex:1">Crear</button></div>' +
         '</div>' +
         '<div id="pcFix" style="display:none">' +
           '<textarea class="pc-ta pc-code" id="pcFixCode" style="min-height:150px" spellcheck="false" placeholder="Pega aquí tu código"></textarea>' +
@@ -136,18 +127,18 @@
         '<div class="pc-expl" id="pcExpl" style="display:none"></div>' +
         '<div id="pcRes" style="display:none">' +
           '<div class="pc-row"><input class="pc-name" id="pcNombre" placeholder="Nombre del proyecto" maxlength="60"></div>' +
-          '<div class="pc-row"><button class="pc-btn pc-pill on" id="pcTabVer">▶ Vista previa</button><button class="pc-btn pc-pill" id="pcTabCod">&lt;/&gt; Código</button></div>' +
+          '<div class="pc-row"><button class="pc-btn pc-pill on" id="pcTabVer">Vista previa</button><button class="pc-btn pc-pill" id="pcTabCod">Código</button></div>' +
           '<div id="pcVer"></div>' +
           '<div id="pcCod" style="display:none">' +
             '<textarea class="pc-ta pc-code" id="pcCodigo" spellcheck="false"></textarea>' +
-            '<div class="pc-row"><button class="pc-btn pc-go" id="pcEjec">▶ Ejecutar</button><button class="pc-btn" id="pcCopiar">Copiar</button></div>' +
+            '<div class="pc-row"><button class="pc-btn pc-go" id="pcEjec">Ejecutar</button><button class="pc-btn" id="pcCopiar">Copiar</button></div>' +
           '</div>' +
           '<div class="pc-row">' +
-            '<button class="pc-btn" id="pcDeshacer">↩ Deshacer</button>' +
-            '<button class="pc-btn" id="pcGuardar">💾 Guardar</button>' +
-            '<button class="pc-btn" id="pcBajar">⬇ Descargar</button>' +
-            '<button class="pc-btn" id="pcZip">📱 App instalable</button>' +
-            '<button class="pc-btn" id="pcFull">⛶ Pantalla completa</button>' +
+            '<button class="pc-btn" id="pcDeshacer">Deshacer</button>' +
+            '<button class="pc-btn" id="pcGuardar">Guardar</button>' +
+            '<button class="pc-btn" id="pcBajar">Descargar</button>' +
+            '<button class="pc-btn" id="pcZip">App instalable</button>' +
+            '<button class="pc-btn" id="pcFull">Pantalla completa</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -167,7 +158,7 @@
     $('pcEjec').addEventListener('click', ejecutarEditado);
     $('pcCopiar').addEventListener('click', copiar);
     $('pcDeshacer').addEventListener('click', deshacer);
-    $('pcGuardar').addEventListener('click', function () { if (guardar()) setEstado('Proyecto guardado ✓'); });
+    $('pcGuardar').addEventListener('click', function () { if (guardar()) setEstado('Proyecto guardado'); });
     $('pcBajar').addEventListener('click', descargar);
     $('pcZip').addEventListener('click', descargarApp);
     $('pcFull').addEventListener('click', pantallaCompleta);
@@ -248,23 +239,42 @@
   // ---------- Hablar con la IA ----------
   function nombreUsuario() { try { return (typeof studentName !== 'undefined' && studentName) || ''; } catch (e) { return ''; } }
 
-  function llamar(mensaje) {
+  function llamar(paquete, alProgreso) {
     ctl = new AbortController();
-    return fetch('/api/chat', {
+    return fetch('/api/code', {
       method: 'POST',
       signal: ctl.signal,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history: [], message: mensaje, image: null, studentName: nombreUsuario(), area: 'Pimath Code' })
+      body: JSON.stringify(paquete)
     }).then(function (r) {
-      return r.json().catch(function () { return {}; }).then(function (d) {
-        if (!r.ok) throw new Error(d.error || ('http_' + r.status));
-        return d.text || '';
+      if (!r.ok) {
+        return r.json().catch(function () { return {}; }).then(function (d) { throw new Error(d.error || ('http_' + r.status)); });
+      }
+      if (!r.body || !r.body.getReader) return r.text();
+      var lector = r.body.getReader(), dec = new TextDecoder(), texto = '';
+      function leer() {
+        return lector.read().then(function (x) {
+          if (x.done) return texto;
+          texto += dec.decode(x.value, { stream: true });
+          if (alProgreso) alProgreso(texto);
+          return leer();
+        });
+      }
+      return leer().catch(function (e) {
+        if (e && e.name === 'AbortError') throw e;
+        if (texto.length > 200) return texto; // se cortó la conexión: se usa lo que llegó
+        throw e;
       });
     });
   }
 
+  function progreso(t) {
+    setEstado('Pimath está escribiendo el código… ' + t.split('\n').length + ' líneas');
+  }
+
   function errorTexto(msg) {
     var m = String(msg || '').toLowerCase();
+    if (m.indexOf('http_404') !== -1) return 'Falta subir el archivo api/code.mjs a GitHub para que Pimath Code funcione.';
     if (m.indexOf('504') !== -1 || m.indexOf('timeout') !== -1 || m.indexOf('502') !== -1) return 'Tardó demasiado generando el código. Pide algo más pequeño o hazlo por partes (primero lo básico y luego agrega cosas).';
     if (m.indexOf('quota') !== -1 || m.indexOf('rate') !== -1 || m.indexOf('429') !== -1 || m.indexOf('exhausted') !== -1) return 'Se alcanzó el límite de uso por ahora. Intenta más tarde.';
     if (m.indexOf('demand') !== -1 || m.indexOf('overloaded') !== -1 || m.indexOf('503') !== -1) return 'Pimath tiene mucha demanda. Intenta de nuevo en unos segundos.';
@@ -307,16 +317,14 @@
     var texto = $('pcIn').value.trim();
     if (!texto) { setEstado('Escribe o dicta lo que quieres crear.', true); return; }
     if (esPimath(texto)) { setEstado(''); mostrarExpl(MSG_PIMATH); return; }
-    var mensaje, esCambio = !!actual.code;
-    if (esCambio) {
-      mensaje = REGLAS + '\n\nCÓDIGO ACTUAL:\n```' + (actual.lang || 'html') + '\n' + actual.code + '\n```\n\nCAMBIO PEDIDO: ' + texto + '\nDevuelve el archivo COMPLETO ya actualizado.';
-    } else {
-      mensaje = REGLAS + '\n\nPEDIDO: ' + texto;
-    }
+    var esCambio = !!actual.code;
+    var mensaje = esCambio
+      ? { accion: 'cambiar', pedido: texto, codigo: actual.code, lang: actual.lang || 'html' }
+      : { accion: 'crear', pedido: texto };
     mostrarExpl('');
     setEstado('Pimath está programando… puede tardar unos segundos.');
     ocupar(true);
-    llamar(mensaje).then(function (texto2) {
+    llamar(mensaje, progreso).then(function (texto2) {
       var r = extraer(texto2);
       if (!r.codigo || !r.codigo.code.trim()) {
         setEstado('');
@@ -326,7 +334,7 @@
       aplicar(r.codigo, esCambio ? actual.name : texto.slice(0, 40));
       mostrarExpl(r.expl);
       $('pcIn').value = '';
-      setEstado(r.codigo.truncado ? 'El código llegó cortado. Pide "continúa" o un cambio más pequeño.' : 'Listo ✓ Pide otro cambio cuando quieras.', !!r.codigo.truncado);
+      setEstado(r.codigo.truncado ? 'El código llegó cortado. Pide "continúa" o un cambio más pequeño.' : 'Listo. Pide otro cambio cuando quieras.', !!r.codigo.truncado);
     }).catch(function (e) {
       if (e && e.name === 'AbortError') { setEstado(''); return; }
       setEstado(errorTexto(e && e.message), true);
@@ -340,14 +348,11 @@
     var problema = $('pcFixErr').value.trim();
     if (!codigo.trim()) { setEstado('Pega el código que quieres revisar.', true); return; }
     if (esPimath(codigo + ' ' + problema)) { setEstado(''); mostrarExpl(MSG_PIMATH); return; }
-    var mensaje = REGLAS +
-      '\n\nTAREA: revisa este código y corrígelo. Primero explica en máximo 5 viñetas cortas qué fallaba y por qué; después entrega el código corregido COMPLETO en un solo bloque.' +
-      '\n\nCÓDIGO:\n```\n' + codigo + '\n```' +
-      (problema ? '\n\nPROBLEMA QUE VE EL USUARIO: ' + problema : '');
+    var mensaje = { accion: 'corregir', codigo: codigo, problema: problema };
     mostrarExpl('');
     setEstado('Pimath está revisando tu código…');
     ocupar(true, 'Pimath está revisando…');
-    llamar(mensaje).then(function (texto) {
+    llamar(mensaje, progreso).then(function (texto) {
       var r = extraer(texto);
       if (!r.codigo || !r.codigo.code.trim()) {
         setEstado('');
@@ -357,7 +362,7 @@
       if (!r.codigo.lang && /<(html|body|canvas|script)/i.test(r.codigo.code)) r.codigo.lang = 'html';
       aplicar(r.codigo, 'Código corregido');
       mostrarExpl(r.expl);
-      setEstado(r.codigo.truncado ? 'El código llegó cortado. Intenta con un fragmento más pequeño.' : 'Listo ✓ Esta es la versión corregida.', !!r.codigo.truncado);
+      setEstado(r.codigo.truncado ? 'El código llegó cortado. Intenta con un fragmento más pequeño.' : 'Listo. Esta es la versión corregida.', !!r.codigo.truncado);
     }).catch(function (e) {
       if (e && e.name === 'AbortError') { setEstado(''); return; }
       setEstado(errorTexto(e && e.message), true);
@@ -389,7 +394,7 @@
     $('pcTabVer').style.display = web ? '' : 'none';
     $('pcZip').style.display = web ? '' : 'none';
     $('pcFull').style.display = web ? '' : 'none';
-    $('pcEjec').textContent = web ? '▶ Ejecutar' : '✓ Guardar cambios';
+    $('pcEjec').textContent = web ? 'Ejecutar' : 'Guardar cambios';
     $('pcDeshacer').disabled = !pila.length;
     actualizarEntrada();
     refrescarVista();
@@ -439,15 +444,15 @@
 
   function copiar() {
     var t = $('pcCodigo').value;
-    try { navigator.clipboard.writeText(t); setEstado('Código copiado ✓'); }
-    catch (e) { var c = $('pcCodigo'); c.select(); try { document.execCommand('copy'); setEstado('Código copiado ✓'); } catch (x) {} }
+    try { navigator.clipboard.writeText(t); setEstado('Código copiado'); }
+    catch (e) { var c = $('pcCodigo'); c.select(); try { document.execCommand('copy'); setEstado('Código copiado'); } catch (x) {} }
   }
 
   function pantallaCompleta() {
     var f = app.querySelector('.pc-frame');
     if (!f) return;
     f.classList.add('full');
-    var x = el('button', '', '✕ Salir');
+    var x = el('button', '', 'Salir');
     x.className = 'pc-exit';
     x.addEventListener('click', function () { f.classList.remove('full'); x.remove(); });
     document.body.appendChild(x);
@@ -480,7 +485,7 @@
     card.className = 'pc-card';
     var cab = el('div', 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;');
     cab.appendChild(el('h3', '', titulo));
-    var x = el('button', 'border:none;background:none;font-size:1.3rem;cursor:pointer;color:#5E6B62;', '✕');
+    var x = el('button', 'border:none;background:none;font-size:1.5rem;line-height:1;cursor:pointer;color:#5E6B62;', '×');
     x.type = 'button';
     x.addEventListener('click', function () { ov.remove(); });
     cab.appendChild(x);
@@ -504,7 +509,7 @@
         t.appendChild(el('b', '', p.name || 'Proyecto'));
         t.appendChild(el('small', '', new Date(p.updated).toLocaleDateString() + ' · ' + ((p.lang || 'html') === 'html' ? 'Web' : p.lang)));
         fila.appendChild(t);
-        var del = el('button', '', '🗑');
+        var del = el('button', '', 'Borrar');
         del.className = 'pc-btn';
         del.type = 'button';
         del.addEventListener('click', function (e) {
@@ -517,7 +522,7 @@
           } else {
             del.dataset.c = '1';
             del.textContent = '¿Seguro?';
-            setTimeout(function () { del.dataset.c = '0'; del.textContent = '🗑'; }, 2500);
+            setTimeout(function () { del.dataset.c = '0'; del.textContent = 'Borrar'; }, 2500);
           }
         });
         fila.appendChild(del);
@@ -545,7 +550,7 @@
         var b = el('button', '');
         b.className = 'pc-idea';
         b.type = 'button';
-        var s = el('span', '', i[0]);
+        var s = el('span', 'display:block;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#B8791E;margin-bottom:4px;', i[0]);
         b.appendChild(s);
         b.appendChild(document.createTextNode(i[1]));
         b.addEventListener('click', function () {
@@ -578,7 +583,7 @@
     if (!actual.code) return;
     var ext = esWeb() ? 'html' : (EXT[actual.lang] || 'txt');
     bajar(new Blob([actual.code], { type: 'text/plain;charset=utf-8' }), slug(actual.name) + '.' + ext);
-    setEstado('Descargando ' + slug(actual.name) + '.' + ext + ' ✓');
+    setEstado('Descargando ' + slug(actual.name) + '.' + ext + '');
   }
 
   // ---------- App instalable (.zip con index.html + manifest + service worker + icono) ----------
@@ -651,19 +656,31 @@
       { name: 'sw.js', data: sw }, { name: 'icon.svg', data: icono }, { name: 'LEEME.txt', data: leeme }
     ]);
     bajar(zip, slug(nombre) + '-app.zip');
-    setEstado('Descargando la app instalable ✓ Dentro del .zip está LEEME.txt con los pasos para instalarla.');
+    setEstado('Descargando la app instalable. Dentro del .zip está LEEME.txt con los pasos para instalarla.');
   }
 
   window.__pimathAbrirCodigo = abrir;
 
   // ---------- Opción "Pimath Code" en el menú lateral ----------
   var ICONO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg>';
+  var ICONO_MIC = '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>';
+  var ICONO_GRAF = '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>';
+  function arreglarIconos() {
+    var nav = $('pxMenuLat');
+    if (!nav) return;
+    Array.prototype.forEach.call(nav.querySelectorAll('.pxm-item'), function (b) {
+      var sp = b.querySelector('span'), sv = b.querySelector('svg');
+      if (!sp || !sv) return;
+      if (sp.textContent === 'Hablar') { sv.innerHTML = ICONO_MIC; b.classList.remove('pxm-voz'); }
+      if (sp.textContent === 'Progreso') { sv.innerHTML = ICONO_GRAF; }
+    });
+  }
   function alAbrirDesdeMenu() {
     try { if (typeof closeSidebar === 'function') closeSidebar(); } catch (e) {}
     setTimeout(abrir, 180);
   }
   function agregarAlMenu() {
-    if ($('pcMenuItem')) return true;
+    if ($('pcMenuItem')) { arreglarIconos(); return true; }
     var nav = $('pxMenuLat');
     if (!nav) return false;
     var b = document.createElement('button');
@@ -673,6 +690,7 @@
     b.innerHTML = ICONO + '<span>Pimath Code</span>';
     b.addEventListener('click', alAbrirDesdeMenu);
     nav.insertBefore(b, nav.firstChild);
+    arreglarIconos();
     return true;
   }
   function agregarRespaldo() {
@@ -681,7 +699,7 @@
     var b = document.createElement('button');
     b.type = 'button';
     b.id = 'pcMenuItem';
-    b.textContent = '💻 Pimath Code';
+    b.textContent = 'Pimath Code';
     b.style.cssText = 'width:100%;padding:12px 8px;border:none;background:none;text-align:left;font:inherit;font-size:1.05rem;cursor:pointer;color:#1C2620;';
     b.addEventListener('click', alAbrirDesdeMenu);
     sb.insertBefore(b, nuevoBtn);
