@@ -183,3 +183,18 @@ header h1{
   color:#000;
 }
 header span{ font-family:var(--font-body); }
+
+/* ===== NUEVO: sin burbujas en el chat (tuyas y de Pimath IA) ===== */
+#chat .msg.user,
+#chat .msg.bot:not(.thinking){
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:4px 4px !important;
+  color:#000 !important;
+}
+#chat .msg.user *{ color:#000 !important; }
+
+/* ===== NUEVO: quitar la barra "Instala Pimath IA en tu dispositivo" ===== */
+#pimathInstallBar{ display:none !important; }
