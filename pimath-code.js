@@ -1,12 +1,14 @@
-// Pimath IA: PIMATH CODE
+// Pimath IA: PIMATH CODE (zona de programación)
 // Menú ☰ > Pimath Code: crear webs, apps y videojuegos con una frase, ver el resultado en vivo,
-// pedir cambios (escribiendo o hablando), corregir código, guardar proyectos y descargarlos.
-// Pimath Code puede programar cualquier cosa MENOS la app de Pimath IA.
+// editar el código con colores, pedir cambios (escribiendo o hablando), corregir código,
+// guardar proyectos y descargarlos. Pimath Code puede programar cualquier cosa MENOS la app de Pimath IA.
 (function () {
   'use strict';
 
   var KEY = 'pimath_code_projects';
   var EXT = { html: 'html', python: 'py', py: 'py', java: 'java', javascript: 'js', js: 'js', typescript: 'ts', ts: 'ts', c: 'c', cpp: 'cpp', 'c++': 'cpp', csharp: 'cs', 'c#': 'cs', php: 'php', css: 'css', json: 'json', kotlin: 'kt', swift: 'swift', go: 'go', rust: 'rs', ruby: 'rb', sql: 'sql', bash: 'sh', sh: 'sh', lua: 'lua', dart: 'dart' };
+  var LENG = { html: 'HTML', python: 'Python', py: 'Python', java: 'Java', javascript: 'JavaScript', js: 'JavaScript', typescript: 'TypeScript', ts: 'TypeScript', c: 'C', cpp: 'C++', 'c++': 'C++', csharp: 'C#', 'c#': 'C#', php: 'PHP', css: 'CSS', json: 'JSON', kotlin: 'Kotlin', swift: 'Swift', go: 'Go', rust: 'Rust', ruby: 'Ruby', sql: 'SQL', bash: 'Bash', sh: 'Bash', lua: 'Lua', dart: 'Dart' };
+  var COLOR_LENG = { JavaScript: ['#f0db4f', '#1e1e1e'], HTML: ['#e34c26', '#fff'], Python: ['#3776ab', '#fff'], Java: ['#b07219', '#fff'], CSS: ['#563d7c', '#fff'], TypeScript: ['#3178c6', '#fff'] };
 
   var IDEAS = [
     ['Juego', 'Snake táctil', 'Hazme un juego de Snake con controles táctiles, marcador, récord guardado y sonidos.'],
@@ -24,6 +26,10 @@
     ['App', 'Lista de tareas', 'Hazme una lista de tareas con categorías, barra de progreso y modo oscuro.']
   ];
 
+  var ICO_ENVIAR = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  var ICO_PARAR = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:block"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+  var ICO_MIC = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  var ICO_X = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
   var proyectos = cargar();
   var actual = { id: null, name: '', lang: 'html', code: '' };
@@ -50,48 +56,144 @@
     var n = normalizar(t).replace(/pimath code/g, '');
     return /pimath/.test(n) || /pimath_state|logo_src/.test(n);
   }
-  var MSG_PIMATH = 'En Pimath Code puedes crear cualquier cosa, menos la app de Pimath IA. ¡Pídeme otra idea!';
+  var MSG_PIMATH = 'En Pimath Code puedes crear cualquier cosa, menos la app de Pimath IA. Pídeme otra idea.';
+
+  // ---------- Colores del código ----------
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function tokenizar(texto, re, clases) {
+    var out = '', ult = 0, m;
+    re.lastIndex = 0;
+    while ((m = re.exec(texto))) {
+      if (m[0] === '') { re.lastIndex++; continue; }
+      out += esc(texto.slice(ult, m.index));
+      var cl = '';
+      for (var g = 1; g < m.length; g++) { if (m[g] !== undefined) { cl = clases[g - 1]; break; } }
+      out += '<span class="hl-' + cl + '">' + esc(m[0]) + '</span>';
+      ult = m.index + m[0].length;
+    }
+    return out + esc(texto.slice(ult));
+  }
+
+  var RE_JS = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\[\s\S]|[^`\\])*`)|(\b\d+(?:\.\d+)?\b)|(\b(?:const|let|var|function|return|if|else|for|while|do|break|continue|switch|case|default|new|class|extends|import|export|from|try|catch|finally|throw|async|await|of|in|typeof|instanceof|this|null|undefined|true|false|delete|void|yield|static|super)\b)|(\b[A-Za-z_$][\w$]*(?=\s*\())/g;
+  var RE_CSS = /(\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(#[0-9a-fA-F]{3,8}\b|(?<![\w-])-?\d*\.?\d+(?:px|em|rem|%|vh|vw|vmin|vmax|s|ms|deg|fr)?)|(@[\w-]+)|([\w-]+(?=\s*:))/g;
+  var RE_GEN = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\b\d+(?:\.\d+)?\b)|(\b(?:def|class|import|from|as|return|if|elif|else|for|while|in|not|and|or|is|None|True|False|try|except|finally|raise|with|lambda|pass|break|continue|public|private|protected|static|void|int|long|double|float|boolean|char|String|new|this|extends|implements|interface|package|final|const|let|var|function|switch|case|default|throw|throws|catch|using|namespace|struct|enum|template|typename|auto|include|define|fn|func|mut|match|impl|use|pub|echo|null|true|false)\b)|(\b[A-Za-z_][\w]*(?=\s*\())/g;
+
+  function hlJS(c) { return tokenizar(c, RE_JS, ['c', 's', 'n', 'k', 'f']); }
+  function hlCSS(c) { return tokenizar(c, RE_CSS, ['c', 's', 'n', 'k', 'a']); }
+  function hlGen(c) { return tokenizar(c, RE_GEN, ['c', 's', 'n', 'k', 'f']); }
+
+  function hlTag(t) {
+    if (/^<!doctype/i.test(t)) return '<span class="hl-m">' + esc(t) + '</span>';
+    var m = /^<(\/?)([a-zA-Z][\w:-]*)([\s\S]*?)(\/?)>$/.exec(t);
+    if (!m) return esc(t);
+    var attrs = esc(m[3]).replace(/([\w:@.-]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s"'>]+)/g, '<span class="hl-a">$1</span>$2<span class="hl-s">$3</span>');
+    return '<span class="hl-p">&lt;' + m[1] + '</span><span class="hl-t">' + m[2] + '</span>' + attrs + '<span class="hl-p">' + m[4] + '&gt;</span>';
+  }
+
+  function hlHTML(code) {
+    var re = /<!--[\s\S]*?-->|<(script|style)\b([^>]*)>([\s\S]*?)<\/\1>|<!doctype[^>]*>|<\/?[a-zA-Z][^>]*>/gi;
+    var out = '', ult = 0, m;
+    while ((m = re.exec(code))) {
+      out += esc(code.slice(ult, m.index));
+      var t = m[0];
+      if (t.slice(0, 4) === '<!--') out += '<span class="hl-c">' + esc(t) + '</span>';
+      else if (m[1]) {
+        out += hlTag('<' + m[1] + m[2] + '>') + (m[1].toLowerCase() === 'script' ? hlJS(m[3]) : hlCSS(m[3])) + hlTag('</' + m[1] + '>');
+      } else out += hlTag(t);
+      ult = m.index + t.length;
+    }
+    return out + esc(code.slice(ult));
+  }
+
+  function resaltar(code) {
+    if (code.length > 250000) return esc(code);
+    var l = actual.lang || '';
+    if (esWeb()) return hlHTML(code);
+    if (l === 'css') return hlCSS(code);
+    if (l === 'javascript' || l === 'js' || l === 'typescript' || l === 'ts') return hlJS(code);
+    return hlGen(code);
+  }
+
+  function etiquetaLang() {
+    if (esWeb()) return /<script[\s>]/i.test(actual.code) ? 'JavaScript' : 'HTML';
+    return LENG[actual.lang] || 'Código';
+  }
 
   // ---------- Estilos ----------
   function estilos() {
     if ($('pcEstilos')) return;
+    var M = 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
     var st = document.createElement('style');
     st.id = 'pcEstilos';
     st.textContent = [
-      '#pcApp{position:fixed;inset:0;z-index:94;display:none;flex-direction:column;background:#fff;color:#1C2620;font-family:var(--font-body,system-ui,sans-serif);padding-top:env(safe-area-inset-top,0px);}',
+      '#pcApp{position:fixed;left:0;right:0;top:0;bottom:0;z-index:94;display:none;flex-direction:column;background:#1e1e1e;color:#cccccc;font-family:var(--font-body,system-ui,sans-serif);padding-top:env(safe-area-inset-top,0px);box-sizing:border-box;-webkit-text-size-adjust:100%}',
       '#pcApp.on{display:flex}',
-      '.pc-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #E4DCC8}',
-      '.pc-top h2{margin:0;font-family:var(--font-display,Georgia,serif);font-size:1.25rem;flex:1}',
-      '.pc-btn{border:1px solid #E4DCC8;background:#FBF8EE;color:#1C2620;border-radius:12px;padding:8px 12px;font:inherit;font-size:.88rem;cursor:pointer;-webkit-tap-highlight-color:transparent}',
-      '.pc-btn:active{background:#F1ECDD}',
-      '.pc-btn:disabled{opacity:.45;cursor:not-allowed}',
-      '.pc-go{background:#B8791E;color:#fff;border:none;font-weight:600}',
+      '.pc-top{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#252526;border-bottom:1px solid #3c3c3c}',
+      '.pc-top h2{margin:0;flex:1;font-family:' + M + ';font-size:1rem;font-weight:600;color:#e6e6e6}',
+      '.pc-top h2 span{color:#d9953a}',
+      '.pc-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;background:#252526;border-bottom:1px solid #3c3c3c;scrollbar-width:none}',
+      '.pc-bar::-webkit-scrollbar{display:none}',
+      '.pc-btn{flex:none;border:1px solid #3c3c3c;background:#2d2d30;color:#cccccc;border-radius:8px;padding:7px 12px;font:inherit;font-size:.84rem;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}',
+      '.pc-btn:active{background:#37373d}',
+      '.pc-btn:disabled{opacity:.4;cursor:not-allowed}',
+      '.pc-btn.on{background:#3a2f1a;border-color:#B8791E;color:#f1c981}',
+      '.pc-go{background:#B8791E;border-color:#B8791E;color:#fff;font-weight:600}',
       '.pc-go:active{background:#9c6618}',
-      '.pc-pill.on{background:#F6E9CF;border-color:#B8791E;font-weight:600}',
-      '.pc-row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap;align-items:center}',
-      '.pc-body{flex:1;overflow:auto;padding:4px 12px calc(28px + env(safe-area-inset-bottom,0px))}',
-      '.pc-ta{width:100%;box-sizing:border-box;min-height:84px;resize:vertical;padding:10px 12px;border:1px solid #E4DCC8;border-radius:12px;font:inherit;background:#FBF8EE;color:#1C2620}',
-      '.pc-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;min-height:300px;white-space:pre;overflow:auto}',
-      '.pc-name{flex:1;min-width:0;padding:9px 12px;border:1px solid #E4DCC8;border-radius:12px;font:inherit;font-weight:600;background:#fff;color:#1C2620}',
-      '.pc-msg{font-size:.88rem;color:#5E6B62;margin:6px 0}',
-      '.pc-msg.err{color:#B8422F}',
-      '.pc-expl{background:#FBF8EE;border:1px solid #E4DCC8;border-radius:12px;padding:10px 12px;margin:8px 0;white-space:pre-wrap;font-size:.9rem;line-height:1.5}',
-      '.pc-frame{width:100%;height:60vh;border:1px solid #E4DCC8;border-radius:12px;background:#fff;display:block}',
-      '.pc-frame.full{position:fixed;inset:0;z-index:99;width:100%;height:100%;border:0;border-radius:0}',
-      '.pc-exit{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:10px;z-index:100;background:rgba(28,38,32,.85);color:#fff;border:none;border-radius:18px;padding:8px 14px;font:inherit;font-size:.85rem;cursor:pointer}',
-      '.pc-mic.on{background:#B8422F;color:#fff;border-color:#B8422F}',
-      '.pc-sheet{position:fixed;inset:0;z-index:97;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}',
-      '.pc-card{background:#fff;color:#1C2620;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow:auto;box-sizing:border-box;font-family:var(--font-body,system-ui,sans-serif)}',
-      '.pc-card h3{margin:0;font-size:1.1rem}',
-      '.pc-item{display:flex;align-items:center;gap:10px;padding:11px 8px;border-bottom:1px solid #E4DCC8;cursor:pointer}',
-      '.pc-item:active{background:#F1ECDD}',
+      '.pc-main{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}',
+      '.pc-vacio{padding:36px 8px 12px;text-align:center}',
+      '.pc-vtitle{font-family:' + M + ';font-size:1.15rem;color:#e6e6e6;margin-bottom:8px}',
+      '.pc-vacio p{margin:0 auto 18px;max-width:440px;color:#9d9d9d;font-size:.92rem;line-height:1.5}',
+      '.pc-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}',
+      '.pc-lbl{font-size:.8rem;color:#9d9d9d;margin:0 0 6px}',
+      '.pc-fixcode{width:100%;box-sizing:border-box;min-height:220px;background:#1e1e1e;color:#d4d4d4;border:1px solid #3c3c3c;border-radius:10px;padding:10px 12px;font-family:' + M + ';font-size:13px;line-height:20px;white-space:pre;overflow:auto;resize:vertical;outline:none;margin-bottom:12px}',
+      '.pc-expl{color:#9d9d9d;font-size:.88rem;line-height:1.55;margin:0 2px 12px;white-space:pre-wrap}',
+      '.pc-box{border:1px solid #3c3c3c;border-radius:10px;overflow:hidden;background:#1e1e1e}',
+      '.pc-tabs{display:flex;align-items:stretch;justify-content:space-between;flex-wrap:wrap;background:#252526;border-bottom:1px solid #3c3c3c}',
+      '.pc-file{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#1e1e1e;border-top:2px solid #B8791E;min-width:0}',
+      '.pc-lang{font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:4px;padding:2px 6px;white-space:nowrap}',
+      '.pc-tabname{background:transparent;border:0;color:#e6e6e6;font-family:' + M + ';font-size:.85rem;width:140px;max-width:38vw;outline:none;padding:0}',
+      '.pc-ext{color:#808080;font-family:' + M + ';font-size:.85rem}',
+      '.pc-views{display:flex}',
+      '.pc-view{border:0;border-bottom:2px solid transparent;background:transparent;color:#9d9d9d;padding:0 14px;min-height:40px;font:inherit;font-size:.84rem;cursor:pointer}',
+      '.pc-view.on{color:#fff;border-bottom-color:#B8791E}',
+      '.pc-frame{width:100%;height:58vh;min-height:260px;border:0;display:block;background:#fff}',
+      '.pc-frame.full{position:fixed;left:0;top:0;width:100%;height:100%;z-index:99}',
+      '.pc-ed{display:flex;height:58vh;min-height:260px;background:#1e1e1e}',
+      '.pc-gut{flex:none;width:42px;overflow:hidden;background:#1e1e1e;color:#858585;text-align:right;padding:10px 8px 10px 0;box-sizing:border-box;font-family:' + M + ';font-size:13px;line-height:20px;user-select:none;-webkit-user-select:none;border-right:1px solid #2b2b2b}',
+      '.pc-gut div{white-space:pre}',
+      '.pc-edwrap{position:relative;flex:1;min-width:0}',
+      '.pc-hl,.pc-edit{position:absolute;left:0;top:0;right:0;bottom:0;margin:0;padding:10px 12px;box-sizing:border-box;font-family:' + M + ';font-size:13px;line-height:20px;white-space:pre;tab-size:2;-moz-tab-size:2;letter-spacing:0;border:0;border-radius:0}',
+      '.pc-hl{overflow:hidden;pointer-events:none;color:#d4d4d4;background:transparent}',
+      '.pc-hl code{font:inherit;white-space:inherit}',
+      '.pc-edit{overflow:auto;background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:#ffffff;resize:none;outline:none}',
+      '.pc-edit::selection{background:rgba(38,79,120,.85)}',
+      '.hl-t{color:#569cd6}.hl-a{color:#9cdcfe}.hl-s{color:#ce9178}.hl-c{color:#6a9955}.hl-k{color:#c586c0}.hl-f{color:#dcdcaa}.hl-n{color:#b5cea8}.hl-m{color:#808080}.hl-p{color:#808080}',
+      '.pc-status{display:flex;gap:16px;padding:5px 12px;background:#B8791E;color:#fff;font-family:' + M + ';font-size:.72rem}',
+      '.pc-acc{display:flex;gap:6px;padding:10px 0 4px;overflow-x:auto;scrollbar-width:none}',
+      '.pc-acc::-webkit-scrollbar{display:none}',
+      '.pc-bottom{padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:#1e1e1e;border-top:1px solid #3c3c3c}',
+      '.pc-estado{font-size:.8rem;color:#9d9d9d;padding:0 6px 6px}',
+      '.pc-estado.err{color:#f48771}',
+      '.pc-input{display:flex;align-items:flex-end;gap:6px;background:#2d2d30;border:1px solid #3c3c3c;border-radius:28px;padding:5px}',
+      '.pc-input:focus-within{border-color:#B8791E}',
+      '.pc-input textarea{flex:1;min-width:0;background:transparent;border:0;outline:none;color:#e6e6e6;font:inherit;font-size:1rem;line-height:1.35;resize:none;padding:9px 4px;height:40px;max-height:120px;box-sizing:border-box}',
+      '.pc-input textarea::placeholder{color:#8a8a8a}',
+      '.pc-round{flex:none;width:40px;height:40px;border-radius:50%;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:#cccccc;padding:0;-webkit-tap-highlight-color:transparent}',
+      '.pc-round.send{background:#B8791E;color:#fff}',
+      '.pc-round.mic.on{background:#c0392b;color:#fff}',
+      '.pc-exit{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:10px;z-index:100;background:rgba(30,30,30,.9);color:#fff;border:1px solid #555;border-radius:18px;padding:8px 14px;font:inherit;font-size:.85rem;cursor:pointer}',
+      '.pc-sheet{position:fixed;left:0;top:0;right:0;bottom:0;z-index:97;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}',
+      '.pc-card{background:#252526;color:#cccccc;width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow:auto;box-sizing:border-box;font-family:var(--font-body,system-ui,sans-serif)}',
+      '.pc-card h3{margin:0;font-size:1.05rem;color:#e6e6e6;font-family:' + M + '}',
+      '.pc-item{display:flex;align-items:center;gap:10px;padding:11px 8px;border-bottom:1px solid #3c3c3c;cursor:pointer}',
+      '.pc-item:active{background:#2d2d30}',
       '.pc-item .t{flex:1;min-width:0}',
-      '.pc-item .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-      '.pc-item .t small{color:#5E6B62}',
+      '.pc-item .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e6e6e6}',
+      '.pc-item .t small{color:#9d9d9d}',
       '.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}',
-      '.pc-idea{border:1px solid #E4DCC8;background:#FBF8EE;border-radius:14px;padding:12px 10px;text-align:left;font:inherit;font-size:.88rem;cursor:pointer;color:#1C2620}',
-      '.pc-idea:active{background:#F6E9CF}',
-      '.pc-idea{min-height:64px}'
+      '.pc-idea{border:1px solid #3c3c3c;background:#2d2d30;border-radius:10px;padding:12px 10px;text-align:left;font:inherit;font-size:.88rem;cursor:pointer;color:#cccccc;min-height:64px}',
+      '.pc-idea:active{background:#37373d}'
     ].join('');
     document.head.appendChild(st);
   }
@@ -105,35 +207,40 @@
     app.setAttribute('role', 'dialog');
     app.setAttribute('aria-label', 'Pimath Code');
     app.innerHTML =
-      '<div class="pc-top"><button class="pc-btn" id="pcCerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:block"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h2>Pimath Code</h2></div>' +
-      '<div class="pc-body">' +
-        '<div class="pc-row">' +
-          '<button class="pc-btn pc-pill on" id="pcModoCrear">Crear</button>' +
-          '<button class="pc-btn pc-pill" id="pcModoFix">Corregir código</button>' +
-          '<button class="pc-btn" id="pcProy">Proyectos</button>' +
-          '<button class="pc-btn" id="pcGal">Ideas</button>' +
-          '<button class="pc-btn" id="pcNuevo">Nuevo</button>' +
+      '<div class="pc-top"><button class="pc-btn" id="pcCerrar" aria-label="Cerrar">' + ICO_X + '</button><h2><span>&lt;/&gt;</span> Pimath Code</h2></div>' +
+      '<div class="pc-bar">' +
+        '<button class="pc-btn on" id="pcModoCrear">Crear</button>' +
+        '<button class="pc-btn" id="pcModoFix">Corregir código</button>' +
+        '<button class="pc-btn" id="pcProy">Proyectos</button>' +
+        '<button class="pc-btn" id="pcGal">Ideas</button>' +
+        '<button class="pc-btn" id="pcNuevo">Nuevo</button>' +
+      '</div>' +
+      '<div class="pc-main" id="pcMain">' +
+        '<div class="pc-vacio" id="pcVacio">' +
+          '<div class="pc-vtitle">¿Qué quieres programar?</div>' +
+          '<p>Describe tu idea en la barra de abajo. Pimath escribe el código en JavaScript, lo ejecuta aquí mismo y puedes pedirle cambios escribiendo o hablando.</p>' +
+          '<div class="pc-chips" id="pcChips"></div>' +
         '</div>' +
-        '<div id="pcCrear">' +
-          '<textarea class="pc-ta" id="pcIn" placeholder="Describe lo que quieres crear. Ej: un juego de carreras con puntaje"></textarea>' +
-          '<div class="pc-row"><button class="pc-btn pc-mic" id="pcMic" aria-label="Dictar por voz"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="pc-btn pc-go" id="pcGo" style="flex:1">Crear</button></div>' +
-        '</div>' +
-        '<div id="pcFix" style="display:none">' +
-          '<textarea class="pc-ta pc-code" id="pcFixCode" style="min-height:150px" spellcheck="false" placeholder="Pega aquí tu código"></textarea>' +
-          '<textarea class="pc-ta" id="pcFixErr" style="margin-top:8px;min-height:60px" placeholder="¿Qué error ves o qué no funciona? (opcional)"></textarea>' +
-          '<div class="pc-row"><button class="pc-btn pc-go" id="pcFixGo" style="flex:1">Revisar y corregir</button></div>' +
-        '</div>' +
-        '<div class="pc-msg" id="pcEstado"></div>' +
+        '<div id="pcFix" style="display:none"><div class="pc-lbl">Pega aquí el código que quieres corregir. Abajo cuéntame qué error ves.</div>' +
+          '<textarea class="pc-fixcode" id="pcFixCode" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="// Pega tu código aquí"></textarea></div>' +
         '<div class="pc-expl" id="pcExpl" style="display:none"></div>' +
         '<div id="pcRes" style="display:none">' +
-          '<div class="pc-row"><input class="pc-name" id="pcNombre" placeholder="Nombre del proyecto" maxlength="60"></div>' +
-          '<div class="pc-row"><button class="pc-btn pc-pill on" id="pcTabVer">Vista previa</button><button class="pc-btn pc-pill" id="pcTabCod">Código</button></div>' +
-          '<div id="pcVer"></div>' +
-          '<div id="pcCod" style="display:none">' +
-            '<textarea class="pc-ta pc-code" id="pcCodigo" spellcheck="false"></textarea>' +
-            '<div class="pc-row"><button class="pc-btn pc-go" id="pcEjec">Ejecutar</button><button class="pc-btn" id="pcCopiar">Copiar</button></div>' +
+          '<div class="pc-box">' +
+            '<div class="pc-tabs">' +
+              '<div class="pc-file"><span class="pc-lang" id="pcLang">JavaScript</span><input class="pc-tabname" id="pcNombre" maxlength="60" placeholder="proyecto" aria-label="Nombre del proyecto"><span class="pc-ext" id="pcExt">.html</span></div>' +
+              '<div class="pc-views"><button class="pc-view on" id="pcTabVer">Vista previa</button><button class="pc-view" id="pcTabCod">Código</button></div>' +
+            '</div>' +
+            '<div id="pcVer"></div>' +
+            '<div id="pcCod" style="display:none"><div class="pc-ed">' +
+              '<div class="pc-gut"><div id="pcGutIn"></div></div>' +
+              '<div class="pc-edwrap"><pre class="pc-hl" id="pcHl" aria-hidden="true"><code id="pcHlCode"></code></pre>' +
+              '<textarea class="pc-edit" id="pcCodigo" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off"></textarea></div>' +
+            '</div></div>' +
+            '<div class="pc-status" id="pcStatus"></div>' +
           '</div>' +
-          '<div class="pc-row">' +
+          '<div class="pc-acc">' +
+            '<button class="pc-btn pc-go" id="pcEjec">Ejecutar</button>' +
+            '<button class="pc-btn" id="pcCopiar">Copiar</button>' +
             '<button class="pc-btn" id="pcDeshacer">Deshacer</button>' +
             '<button class="pc-btn" id="pcGuardar">Guardar</button>' +
             '<button class="pc-btn" id="pcBajar">Descargar</button>' +
@@ -141,8 +248,27 @@
             '<button class="pc-btn" id="pcFull">Pantalla completa</button>' +
           '</div>' +
         '</div>' +
+      '</div>' +
+      '<div class="pc-bottom">' +
+        '<div class="pc-estado" id="pcEstado" style="display:none"></div>' +
+        '<div class="pc-input">' +
+          '<button class="pc-round mic" id="pcMic" aria-label="Dictar por voz">' + ICO_MIC + '</button>' +
+          '<textarea id="pcIn" rows="1" autocomplete="off"></textarea>' +
+          '<button class="pc-round send" id="pcGo" aria-label="Enviar">' + ICO_ENVIAR + '</button>' +
+        '</div>' +
       '</div>';
     document.body.appendChild(app);
+
+    // Ideas rápidas en la pantalla de inicio
+    var chips = $('pcChips');
+    [1, 0, 5, 8].forEach(function (n) {
+      var i = IDEAS[n];
+      var b = el('button', '', i[1]);
+      b.className = 'pc-btn';
+      b.type = 'button';
+      b.addEventListener('click', function () { $('pcIn').value = i[2]; autoAjustar(); enviar(); });
+      chips.appendChild(b);
+    });
 
     $('pcCerrar').addEventListener('click', cerrar);
     $('pcModoCrear').addEventListener('click', function () { cambiarModo('crear'); });
@@ -150,8 +276,7 @@
     $('pcProy').addEventListener('click', abrirProyectos);
     $('pcGal').addEventListener('click', abrirIdeas);
     $('pcNuevo').addEventListener('click', nuevo);
-    $('pcGo').addEventListener('click', generar);
-    $('pcFixGo').addEventListener('click', corregir);
+    $('pcGo').addEventListener('click', enviar);
     $('pcMic').addEventListener('click', dictar);
     $('pcTabVer').addEventListener('click', function () { pestana('ver'); });
     $('pcTabCod').addEventListener('click', function () { pestana('cod'); });
@@ -163,27 +288,57 @@
     $('pcZip').addEventListener('click', descargarApp);
     $('pcFull').addEventListener('click', pantallaCompleta);
     $('pcNombre').addEventListener('change', function () { actual.name = this.value.trim().slice(0, 60) || actual.name; guardar(); });
-    $('pcIn').addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) generar(); });
+    $('pcIn').addEventListener('input', autoAjustar);
+    $('pcIn').addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) enviar(); });
+
+    var ta = $('pcCodigo');
+    ta.addEventListener('input', function () { pintarCodigo(); });
+    ta.addEventListener('scroll', sincronizar);
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        var a = ta.selectionStart, b = ta.selectionEnd;
+        ta.value = ta.value.slice(0, a) + '  ' + ta.value.slice(b);
+        ta.selectionStart = ta.selectionEnd = a + 2;
+        pintarCodigo();
+      }
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', ajustarTeclado);
+      window.visualViewport.addEventListener('scroll', ajustarTeclado);
+    }
     actualizarEntrada();
   }
 
-  function abrir() { construir(); app.classList.add('on'); }
-  function cerrar() { if (app) app.classList.remove('on'); }
+  // Mantiene la barra de escribir visible cuando sale el teclado
+  function ajustarTeclado() {
+    if (!app || !app.classList.contains('on') || !window.visualViewport) return;
+    var vv = window.visualViewport;
+    app.style.height = vv.height + 'px';
+    app.style.top = vv.offsetTop + 'px';
+    app.style.bottom = 'auto';
+  }
+
+  function abrir() { construir(); app.classList.add('on'); ajustarTeclado(); }
+  function cerrar() { if (app) { app.classList.remove('on'); app.style.height = ''; app.style.top = '0'; app.style.bottom = '0'; } }
 
   function cambiarModo(m) {
     modo = m;
     $('pcModoCrear').classList.toggle('on', m === 'crear');
     $('pcModoFix').classList.toggle('on', m === 'fix');
-    $('pcCrear').style.display = m === 'crear' ? '' : 'none';
     $('pcFix').style.display = m === 'fix' ? '' : 'none';
+    if (m === 'fix' && !$('pcFixCode').value && actual.code) $('pcFixCode').value = actual.code;
     setEstado('');
+    actualizarEntrada();
   }
 
   function setEstado(txt, error) {
     var e = $('pcEstado');
     if (!e) return;
     e.textContent = txt || '';
-    e.className = 'pc-msg' + (error ? ' err' : '');
+    e.className = 'pc-estado' + (error ? ' err' : '');
+    e.style.display = txt ? '' : 'none';
   }
 
   function mostrarExpl(txt) {
@@ -193,12 +348,18 @@
     e.textContent = txt;
   }
 
+  function autoAjustar() {
+    var t = $('pcIn');
+    t.style.height = '40px';
+    t.style.height = Math.min(t.scrollHeight, 120) + 'px';
+  }
+
   function actualizarEntrada() {
-    var tiene = !!actual.code;
-    $('pcIn').placeholder = tiene
-      ? 'Pide un cambio. Ej: ponle fondo azul y añade un marcador de puntos'
-      : 'Describe lo que quieres crear. Ej: un juego de carreras con puntaje';
-    $('pcGo').textContent = tiene ? 'Aplicar cambio' : 'Crear';
+    var t = $('pcIn');
+    if (!t) return;
+    if (modo === 'fix') t.placeholder = 'Cuéntame qué error ves (opcional) y toca enviar';
+    else if (actual.code) t.placeholder = 'Pide un cambio. Ej: ponle fondo azul y un marcador de puntos';
+    else t.placeholder = 'Describe lo que quieres programar…';
   }
 
   function nuevo() {
@@ -206,10 +367,11 @@
     actual = { id: null, name: '', lang: 'html', code: '' };
     pila = [];
     $('pcRes').style.display = 'none';
+    $('pcVacio').style.display = '';
     $('pcIn').value = '';
+    $('pcFixCode').value = '';
+    autoAjustar();
     mostrarExpl('');
-    setEstado('');
-    actualizarEntrada();
     cambiarModo('crear');
   }
 
@@ -230,15 +392,14 @@
       var t = ev.results[0][0].transcript;
       var campo = $('pcIn');
       campo.value = (campo.value ? campo.value + ' ' : '') + t;
+      autoAjustar();
     };
     reconocimiento.onerror = function () { setEstado('No pude escucharte. Revisa el permiso del micrófono.', true); };
     reconocimiento.onend = function () { reconocimiento = null; btn.classList.remove('on'); if ($('pcEstado').textContent === 'Te escucho…') setEstado(''); };
     try { reconocimiento.start(); } catch (e) { reconocimiento = null; btn.classList.remove('on'); }
   }
 
-  // ---------- Hablar con la IA ----------
-  function nombreUsuario() { try { return (typeof studentName !== 'undefined' && studentName) || ''; } catch (e) { return ''; } }
-
+  // ---------- Hablar con la IA (el servidor envía el código poco a poco) ----------
   function llamar(paquete, alProgreso) {
     ctl = new AbortController();
     return fetch('/api/code', {
@@ -299,21 +460,22 @@
     return { codigo: mejor, expl: expl };
   }
 
-  function ocupar(si, textoBoton) {
+  function ocupar(si) {
     ocupado = si;
-    ['pcGo', 'pcFixGo'].forEach(function (id) {
-      var b = $(id);
-      if (!b) return;
-      b.disabled = si;
-      if (si) { b.dataset.txt = b.textContent; b.textContent = textoBoton || 'Pimath está programando…'; }
-      else if (b.dataset.txt) b.textContent = b.dataset.txt;
-    });
+    var b = $('pcGo');
+    if (!b) return;
+    b.innerHTML = si ? ICO_PARAR : ICO_ENVIAR;
+    b.setAttribute('aria-label', si ? 'Detener' : 'Enviar');
     if (!si) actualizarEntrada();
+  }
+
+  function enviar() {
+    if (ocupado) { if (ctl) ctl.abort(); return; }
+    if (modo === 'fix') corregir(); else generar();
   }
 
   // ---------- Crear / cambiar ----------
   function generar() {
-    if (ocupado) return;
     var texto = $('pcIn').value.trim();
     if (!texto) { setEstado('Escribe o dicta lo que quieres crear.', true); return; }
     if (esPimath(texto)) { setEstado(''); mostrarExpl(MSG_PIMATH); return; }
@@ -334,24 +496,24 @@
       aplicar(r.codigo, esCambio ? actual.name : texto.slice(0, 40));
       mostrarExpl(r.expl);
       $('pcIn').value = '';
+      autoAjustar();
       setEstado(r.codigo.truncado ? 'El código llegó cortado. Pide "continúa" o un cambio más pequeño.' : 'Listo. Pide otro cambio cuando quieras.', !!r.codigo.truncado);
     }).catch(function (e) {
-      if (e && e.name === 'AbortError') { setEstado(''); return; }
+      if (e && e.name === 'AbortError') { setEstado('Detenido.'); return; }
       setEstado(errorTexto(e && e.message), true);
     }).then(function () { ocupar(false); });
   }
 
   // ---------- Corregir código ----------
   function corregir() {
-    if (ocupado) return;
     var codigo = $('pcFixCode').value;
-    var problema = $('pcFixErr').value.trim();
-    if (!codigo.trim()) { setEstado('Pega el código que quieres revisar.', true); return; }
+    var problema = $('pcIn').value.trim();
+    if (!codigo.trim()) { setEstado('Pega arriba el código que quieres revisar.', true); return; }
     if (esPimath(codigo + ' ' + problema)) { setEstado(''); mostrarExpl(MSG_PIMATH); return; }
     var mensaje = { accion: 'corregir', codigo: codigo, problema: problema };
     mostrarExpl('');
     setEstado('Pimath está revisando tu código…');
-    ocupar(true, 'Pimath está revisando…');
+    ocupar(true);
     llamar(mensaje, progreso).then(function (texto) {
       var r = extraer(texto);
       if (!r.codigo || !r.codigo.code.trim()) {
@@ -362,9 +524,11 @@
       if (!r.codigo.lang && /<(html|body|canvas|script)/i.test(r.codigo.code)) r.codigo.lang = 'html';
       aplicar(r.codigo, 'Código corregido');
       mostrarExpl(r.expl);
+      $('pcIn').value = '';
+      autoAjustar();
       setEstado(r.codigo.truncado ? 'El código llegó cortado. Intenta con un fragmento más pequeño.' : 'Listo. Esta es la versión corregida.', !!r.codigo.truncado);
     }).catch(function (e) {
-      if (e && e.name === 'AbortError') { setEstado(''); return; }
+      if (e && e.name === 'AbortError') { setEstado('Detenido.'); return; }
       setEstado(errorTexto(e && e.message), true);
     }).then(function () { ocupar(false); });
   }
@@ -386,11 +550,38 @@
     mostrarResultado();
   }
 
+  function sincronizar() {
+    var ta = $('pcCodigo');
+    $('pcHl').scrollTop = ta.scrollTop;
+    $('pcHl').scrollLeft = ta.scrollLeft;
+    $('pcGutIn').parentNode.scrollTop = ta.scrollTop;
+  }
+
+  function pintarCodigo() {
+    var ta = $('pcCodigo'), c = ta.value;
+    $('pcHlCode').innerHTML = resaltar(c) + '\n';
+    var n = c.split('\n').length, g = '';
+    for (var i = 1; i <= n; i++) g += i + '\n';
+    $('pcGutIn').textContent = g;
+    var leng = etiquetaLang();
+    $('pcStatus').innerHTML = '';
+    ['Pimath Code', leng, n + ' líneas', 'UTF-8'].forEach(function (t) { $('pcStatus').appendChild(el('span', '', t)); });
+    sincronizar();
+  }
+
   function mostrarResultado() {
+    $('pcVacio').style.display = 'none';
     $('pcRes').style.display = 'block';
     $('pcNombre').value = actual.name;
     $('pcCodigo').value = actual.code;
     var web = esWeb();
+    var leng = etiquetaLang();
+    var badge = $('pcLang');
+    var col = COLOR_LENG[leng] || ['#6a6a6a', '#fff'];
+    badge.textContent = leng;
+    badge.style.background = col[0];
+    badge.style.color = col[1];
+    $('pcExt').textContent = '.' + (web ? 'html' : (EXT[actual.lang] || 'txt'));
     $('pcTabVer').style.display = web ? '' : 'none';
     $('pcZip').style.display = web ? '' : 'none';
     $('pcFull').style.display = web ? '' : 'none';
@@ -399,6 +590,7 @@
     actualizarEntrada();
     refrescarVista();
     pestana(web ? 'ver' : 'cod');
+    pintarCodigo();
   }
 
   function refrescarVista() {
@@ -419,6 +611,8 @@
     $('pcCod').style.display = ver ? 'none' : '';
     $('pcTabVer').classList.toggle('on', ver);
     $('pcTabCod').classList.toggle('on', !ver);
+    $('pcEjec').style.display = ver ? 'none' : '';
+    if (!ver) sincronizar();
   }
 
   function ejecutarEditado() {
@@ -485,7 +679,7 @@
     card.className = 'pc-card';
     var cab = el('div', 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;');
     cab.appendChild(el('h3', '', titulo));
-    var x = el('button', 'border:none;background:none;font-size:1.5rem;line-height:1;cursor:pointer;color:#5E6B62;', '×');
+    var x = el('button', 'border:none;background:none;font-size:1.6rem;line-height:1;cursor:pointer;color:#9d9d9d;', '×');
     x.type = 'button';
     x.addEventListener('click', function () { ov.remove(); });
     cab.appendChild(x);
@@ -498,7 +692,7 @@
   function abrirProyectos() {
     hoja('Mis proyectos', function (card, cerrarHoja) {
       if (!proyectos.length) {
-        card.appendChild(el('p', 'color:#5E6B62;', 'Aún no tienes proyectos. Crea uno y se guarda solo en este dispositivo.'));
+        card.appendChild(el('p', 'color:#9d9d9d;', 'Aún no tienes proyectos. Crea uno y se guarda solo en este dispositivo.'));
         return;
       }
       proyectos.forEach(function (p) {
@@ -507,7 +701,7 @@
         var t = el('div', '');
         t.className = 't';
         t.appendChild(el('b', '', p.name || 'Proyecto'));
-        t.appendChild(el('small', '', new Date(p.updated).toLocaleDateString() + ' · ' + ((p.lang || 'html') === 'html' ? 'Web' : p.lang)));
+        t.appendChild(el('small', '', new Date(p.updated).toLocaleDateString() + ' · ' + ((p.lang || 'html') === 'html' ? 'Web' : (LENG[p.lang] || p.lang))));
         fila.appendChild(t);
         var del = el('button', '', 'Borrar');
         del.className = 'pc-btn';
@@ -542,23 +736,23 @@
 
   // ---------- Ideas para empezar ----------
   function abrirIdeas() {
-    hoja('Ideas para empezar', function (card, cerrarHoja) {
-      card.appendChild(el('p', 'margin:0;color:#5E6B62;font-size:.9rem;', 'Toca una idea y Pimath la crea. Luego puedes pedirle cambios.'));
+    hoja('Ideas para programar', function (card, cerrarHoja) {
+      card.appendChild(el('p', 'margin:0;color:#9d9d9d;font-size:.9rem;', 'Toca una idea y Pimath escribe el código. Luego puedes pedirle cambios.'));
       var grid = el('div', '');
       grid.className = 'pc-grid';
       IDEAS.forEach(function (i) {
         var b = el('button', '');
         b.className = 'pc-idea';
         b.type = 'button';
-        var s = el('span', 'display:block;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#B8791E;margin-bottom:4px;', i[0]);
-        b.appendChild(s);
+        b.appendChild(el('span', 'display:block;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#d9953a;margin-bottom:4px;', i[0]));
         b.appendChild(document.createTextNode(i[1]));
         b.addEventListener('click', function () {
           cerrarHoja();
           if (actual.code) nuevo();
           cambiarModo('crear');
           $('pcIn').value = i[2];
-          generar();
+          autoAjustar();
+          enviar();
         });
         grid.appendChild(b);
       });
@@ -583,7 +777,7 @@
     if (!actual.code) return;
     var ext = esWeb() ? 'html' : (EXT[actual.lang] || 'txt');
     bajar(new Blob([actual.code], { type: 'text/plain;charset=utf-8' }), slug(actual.name) + '.' + ext);
-    setEstado('Descargando ' + slug(actual.name) + '.' + ext + '');
+    setEstado('Descargando ' + slug(actual.name) + '.' + ext);
   }
 
   // ---------- App instalable (.zip con index.html + manifest + service worker + icono) ----------
