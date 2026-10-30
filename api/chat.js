@@ -54,7 +54,7 @@ async function tryModel(apiKey, model, system, contents, deadline) {
       attempt--;
       continue;
     }
-    if (res.r.status === 503) { await sleep(1000 * attempt); continue; }
+    if ([500, 502, 503].includes(res.r.status)) { await sleep(800 * attempt); continue; }
     return res;
   }
   return last;
@@ -138,7 +138,7 @@ module.exports = async (req, res) => {
       if (result.r.ok) { result.model = model; break; }
       const st = result.r.status;
       console.error('Modelo', model, 'falló:', st, result.data.error && result.data.error.message);
-      if (![429, 404, 503].includes(st)) break; // otros errores: no tiene sentido probar otro modelo
+      if (![429, 404, 500, 502, 503].includes(st)) break; // otros errores: no tiene sentido probar otro modelo
     }
     if (!result || result.timeout) return res.status(504).json({ error: 'timeout' });
     const { r, data } = result;
