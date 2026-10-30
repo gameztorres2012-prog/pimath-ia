@@ -348,7 +348,7 @@ function addSpeakBtn(div, text){
       document.querySelectorAll('.pimath-avatar-img').forEach(img => img.classList.remove('talking'));
       return;
     }
-    hablarTexto(text);
+    hablarTexto(String(text||'').replace(/\[\[\s*RESPUESTA\s*:\s*[A-E]\s*\]\]/gi,''));
   });
   div.appendChild(b);
 }

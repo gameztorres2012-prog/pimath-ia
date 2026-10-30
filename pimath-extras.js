@@ -101,26 +101,124 @@
   }
 
   // ---- 🎯 Practicar ----
+  var FORMATO_PRACTICA =
+    'FORMATO OBLIGATORIO de cada ejercicio (opción múltiple): primero el enunciado en una línea que empiece con "Ejercicio:"; ' +
+    'luego EXACTAMENTE 5 opciones, cada una en su propia línea, con este formato: "A) texto", "B) texto", "C) texto", "D) texto", "E) texto"; ' +
+    'solo UNA es correcta y las otras 4 deben ser incorrectas pero creíbles; cambia la posición de la correcta de un ejercicio a otro; ' +
+    'al final, en una última línea, escribe la marca oculta [[RESPUESTA: X]] con la letra correcta (por ejemplo [[RESPUESTA: C]]). ' +
+    'NO reveles cuál es la correcta ni resuelvas el ejercicio en ese mensaje.';
+  window.__pimathFormatoPractica = FORMATO_PRACTICA;
+
   function abrirPractica() {
-    var nivel = 'fácil', tema = (typeof currentArea !== 'undefined' && currentArea) ? currentArea : 'cualquier tema de matemáticas';
+    var nivel = 'fácil', materia = 'mate', libre = '';
+    var tema = (typeof currentArea !== 'undefined' && currentArea) ? currentArea : 'cualquier tema de matemáticas';
     hoja('Practicar', function (card, cerrar) {
-      card.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;', 'Pimath te pone ejercicios uno por uno y te corrige.'));
+      card.appendChild(el('p', 'margin:0 0 4px;color:#5E6B62;', 'Pimath te pone ejercicios con opciones A–E y te dice si acertaste.'));
       card.appendChild(el('p', 'margin:10px 0 2px;font-weight:600;', 'Nivel'));
       opciones(card, [['fácil', 'Fácil'], ['medio', 'Medio'], ['difícil', 'Difícil']], nivel, function (v) { nivel = v; });
-      card.appendChild(el('p', 'margin:10px 0 2px;font-weight:600;', 'Tema'));
+
+      card.appendChild(el('p', 'margin:10px 0 2px;font-weight:600;', 'Materia'));
+      var cajaMate = el('div', ''), cajaLibre = el('div', 'display:none;');
+      opciones(card, [['mate', '🧮 Matemáticas'], ['libre', '✍️ Escribir mi tema']], materia, function (v) {
+        materia = v;
+        cajaMate.style.display = v === 'mate' ? '' : 'none';
+        cajaLibre.style.display = v === 'libre' ? '' : 'none';
+        if (v === 'libre') setTimeout(function () { campoLibre.focus(); }, 50);
+      });
+
+      // Matemáticas: temas
+      cajaMate.appendChild(el('p', 'margin:10px 0 2px;font-weight:600;', 'Tema'));
       var temas = [['cualquier tema de matemáticas', 'General'], ['aritmética', 'Aritmética'], ['álgebra', 'Álgebra'], ['geometría', 'Geometría'], ['estadística', 'Estadística']];
       var act = temas[0][0];
       temas.forEach(function (t) { if (t[0] === String(tema).toLowerCase()) act = t[0]; });
       tema = act;
-      opciones(card, temas, act, function (v) { tema = v; });
+      opciones(cajaMate, temas, act, function (v) { tema = v; });
+      card.appendChild(cajaMate);
+
+      // Libre: el usuario escribe de qué quiere practicar
+      cajaLibre.appendChild(el('p', 'margin:10px 0 6px;font-weight:600;', '¿De qué quieres practicar?'));
+      var campoLibre = el('input', 'width:100%;box-sizing:border-box;border:1px solid #E4DCC8;background:#FBF8EE;color:#1C2620;border-radius:12px;padding:11px 14px;font:inherit;');
+      campoLibre.type = 'text';
+      campoLibre.placeholder = 'Ej: capitales de Sudamérica, inglés, historia de Colombia…';
+      campoLibre.maxLength = 120;
+      campoLibre.addEventListener('input', function () { libre = campoLibre.value; });
+      campoLibre.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); go.click(); } });
+      cajaLibre.appendChild(campoLibre);
+      card.appendChild(cajaLibre);
+
       var go = el('button', GO, 'Empezar'); go.type = 'button';
       go.addEventListener('click', function () {
+        var quiero;
+        if (materia === 'libre') {
+          libre = (campoLibre.value || '').trim();
+          if (!libre) { campoLibre.style.borderColor = '#C62828'; campoLibre.focus(); return; }
+          quiero = 'Quiero practicar este tema: ' + libre + ' (nivel ' + nivel + ').';
+        } else {
+          quiero = 'Quiero practicar ' + tema + ' (nivel ' + nivel + ').';
+        }
         cerrar();
         datos.practicas++; guardar();
-        enviarTexto('Quiero practicar ' + tema + ' (nivel ' + nivel + '). Ponme UN ejercicio y espera mi respuesta. Cuando responda dime si está bien o mal, explícame brevemente y ponme el siguiente, subiendo o bajando la dificultad según me vaya.');
+        enviarTexto(quiero + ' Ponme UN ejercicio de opción múltiple y espera mi respuesta. ' + FORMATO_PRACTICA +
+          ' Cuando yo elija una letra, dime si está bien o mal, explícame brevemente y ponme el siguiente ejercicio con el mismo formato, subiendo o bajando la dificultad según me vaya.');
       });
       card.appendChild(go);
     });
+  }
+
+  // ---- Opciones A–E clicables dentro de los mensajes de Pimath ----
+  var chatBox = document.getElementById('chat');
+  function procesarOpciones(div) {
+    if (!div || div.getAttribute('data-px-abcde')) return;
+    var h = div.innerHTML;
+    var sp = div.querySelector('.speak-btn');
+    if (sp) { h = h.replace(sp.outerHTML, ''); }
+    var m = h.match(/\[\[\s*RESPUESTA\s*:\s*([A-E])\s*\]\]/i);
+    if (!m) return;
+    var correcta = m[1].toUpperCase();
+    div.setAttribute('data-px-abcde', '1');
+    var limpio = h.replace(/(<br\s*\/?>\s*)*\[\[\s*RESPUESTA\s*:\s*[A-E]\s*\]\]/i, '');
+    var partes = limpio.split(/<br\s*\/?>/i);
+    var fila = [], resto = [];
+    partes.forEach(function (ln) {
+      var mm = ln.replace(/^\s*(<\/?(p|strong)>)*\s*/i, '').match(/^([A-E])[\)\.]\s*([\s\S]+)$/);
+      if (mm) fila.push([mm[1], mm[2].replace(/<\/p>\s*$/i, '')]); else resto.push(ln);
+    });
+    if (fila.length < 2) { div.innerHTML = limpio; if (sp) div.appendChild(sp); return; }
+    // enunciado (todo lo que no es opción)
+    div.innerHTML = resto.join('<br>').replace(/(<br>\s*)+(<\/p>)?\s*$/i, '$2');
+    var caja = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:10px;');
+    var botones = [];
+    fila.forEach(function (o) {
+      var b = el('button', OP + 'display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;margin:0;');
+      b.type = 'button';
+      var letra = el('span', 'font-weight:700;color:#B8791E;min-width:1.2em;', o[0]);
+      var txt = el('span', 'flex:1;'); txt.innerHTML = o[1];
+      b.appendChild(letra); b.appendChild(txt);
+      b.addEventListener('click', function () {
+        botones.forEach(function (x) { x.disabled = true; x.style.cursor = 'default'; });
+        var ok = o[0] === correcta;
+        b.style.cssText += ok ? 'border-color:#2E7D32;background:#E3F3E5;' : 'border-color:#C62828;background:#FBE4E4;';
+        if (!ok) botones.forEach(function (x) { if (x.firstChild.textContent === correcta) x.style.cssText += 'border-color:#2E7D32;background:#E3F3E5;'; });
+        var res = el('div', 'margin-top:8px;font-weight:600;color:' + (ok ? '#2E7D32' : '#C62828') + ';', ok ? '✅ ¡Correcto!' : '❌ Incorrecto. La correcta era la ' + correcta + '.');
+        caja.appendChild(res);
+        enviarTexto('Elegí la opción ' + o[0] + ' (' + (ok ? 'correcta' : 'incorrecta; la correcta era ' + correcta) + '). Explícame brevemente por qué y ponme el siguiente ejercicio con el mismo formato A–E.');
+      });
+      botones.push(b); caja.appendChild(b);
+    });
+    div.appendChild(caja);
+    if (sp) div.appendChild(sp);
+    try { if (window.renderMathInElement) window.renderMathInElement(div, { delimiters: [{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}], throwOnError: false }); } catch (e) {}
+  }
+  if (chatBox) {
+    var lim = false;
+    new MutationObserver(function () {
+      if (lim) return; lim = true;
+      setTimeout(function () {
+        lim = false;
+        var bots = chatBox.querySelectorAll('.msg.bot:not(.thinking)');
+        for (var i = 0; i < bots.length; i++) procesarOpciones(bots[i]);
+      }, 30);
+    }).observe(chatBox, { childList: true, subtree: true, characterData: true });
   }
 
   // ---- ✏️ Pizarra ----
