@@ -177,10 +177,10 @@
     var correcta = m[1].toUpperCase();
     div.setAttribute('data-px-abcde', '1');
     var limpio = h.replace(/(<br\s*\/?>\s*)*\[\[\s*RESPUESTA\s*:\s*[A-E]\s*\]\]/i, '');
-    var partes = limpio.split(/<br\s*\/?>/i);
+    var partes = limpio.replace(/<\/p>\s*<p>/gi, '<br>').split(/<br\s*\/?>/i);
     var fila = [], resto = [];
     partes.forEach(function (ln) {
-      var mm = ln.replace(/^\s*(<\/?(p|strong)>)*\s*/i, '').match(/^([A-E])[\)\.]\s*([\s\S]+)$/);
+      var mm = ln.replace(/^\s*(<\/?(p|strong|em)>)*\s*/i, '').match(/^([A-E])[\)\.](?:\s*<\/(?:strong|em)>)?\s*([\s\S]+)$/);
       if (mm) fila.push([mm[1], mm[2].replace(/<\/p>\s*$/i, '')]); else resto.push(ln);
     });
     if (fila.length < 2) { div.innerHTML = limpio; if (sp) div.appendChild(sp); return; }
