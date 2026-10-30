@@ -159,6 +159,9 @@
       '.pc-edit{overflow:auto;background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:#1f1f1f;resize:none;outline:none}',
       '.pc-edit::selection{background:rgba(26,115,232,.25)}',
       '.hl-t{color:#800000}.hl-a{color:#e50000}.hl-s{color:#a31515}.hl-c{color:#008000}.hl-k{color:#af00db}.hl-f{color:#795e26}.hl-n{color:#098658}.hl-m{color:#808080}.hl-p{color:#808080}',
+      '.pc-errbar{display:none;align-items:center;gap:10px;padding:10px 12px;background:#fdecea;color:#b3261e;font-size:.86rem;line-height:1.4;border-top:1px solid #f5c6c2}',
+      '.pc-errbar span{flex:1;min-width:0;overflow-wrap:anywhere}',
+      '.pc-errbar button{flex:none;border:0;background:#b3261e;color:#fff;border-radius:16px;padding:7px 14px;font:inherit;font-size:.85rem;cursor:pointer}',
       '.pc-bottom{padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));background:#fff}',
       '.pc-input{display:flex;align-items:flex-end;gap:4px;max-width:780px;margin:0 auto;background:#f4f4f4;border:1px solid #e3e3e3;border-radius:28px;padding:5px}',
       '.pc-input:focus-within{border-color:#B8791E;background:#fff}',
@@ -213,6 +216,7 @@
             '<button class="pc-exp" id="pcExportar">' + ICO_EXPORTAR + '<span>Exportar</span>' + ICO_ABAJO + '</button>' +
           '</div>' +
           '<div id="pcVer"></div>' +
+          '<div class="pc-errbar" id="pcErrBar"><span id="pcErrTxt"></span><button type="button" id="pcErrFix">Corregir con Pimath</button></div>' +
           '<div id="pcCod" style="display:none"><div class="pc-ed">' +
             '<pre class="pc-hl" id="pcHl" aria-hidden="true"><code id="pcHlCode"></code></pre>' +
             '<textarea class="pc-edit" id="pcCodigo" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off"></textarea>' +
@@ -246,6 +250,8 @@
       abrirMenu(this, items);
       e.stopPropagation();
     });
+    $('pcErrFix').addEventListener('click', corregirError);
+    window.addEventListener('message', alMensaje);
     $('pcShare').addEventListener('click', compartir);
     $('pcFull').addEventListener('click', pantallaCompleta);
     $('pcNombre').addEventListener('change', function () { actual.name = this.value.trim().slice(0, 60) || actual.name; guardar(); });
@@ -606,21 +612,55 @@
     $('pcFull').style.display = web ? '' : 'none';
     $('pcDeshacer').disabled = !pila.length;
     actualizarEntrada();
-    refrescarVista();
+    vistaVieja = true;
     pestana(web ? 'ver' : 'cod');
     pintarCodigo();
   }
 
+  // Se inyecta en la vista previa: arregla el almacenamiento (que el aislamiento bloquea) y avisa de errores
+  var SHIM = '<script>(function(){try{localStorage.getItem("x")}catch(e){var m={};var f={getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]},clear:function(){m={}},key:function(i){return Object.keys(m)[i]||null},get length(){return Object.keys(m).length}};try{Object.defineProperty(window,"localStorage",{value:f,configurable:true});Object.defineProperty(window,"sessionStorage",{value:f,configurable:true})}catch(x){}}' +
+    'function av(t){try{parent.postMessage({pimathCode:"error",msg:String(t).slice(0,300)},"*")}catch(e){}}' +
+    'window.addEventListener("error",function(e){av((e.message||"Error")+(e.filename&&e.lineno?"":""))});' +
+    'window.addEventListener("unhandledrejection",function(e){av("Promesa rechazada: "+((e.reason&&e.reason.message)||e.reason))});})();<\/script>';
+
+  function conShim(c) {
+    var m = /<head(\s[^>]*)?>/i.exec(c) || /<html(\s[^>]*)?>/i.exec(c);
+    if (m) return c.slice(0, m.index + m[0].length) + SHIM + c.slice(m.index + m[0].length);
+    return SHIM + c;
+  }
+
+  var vistaVieja = true;
   function refrescarVista() {
     var cont = $('pcVer');
     cont.innerHTML = '';
+    vistaVieja = false;
+    ocultarError();
     if (!esWeb()) return;
     var f = document.createElement('iframe');
     f.className = 'pc-frame';
     // Sin allow-same-origin: el proyecto no puede leer los datos de Pimath IA
     f.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-pointer-lock allow-popups');
-    f.srcdoc = actual.code;
+    f.srcdoc = conShim(actual.code);
     cont.appendChild(f);
+  }
+
+  var ultimoErrorJuego = '';
+  function alMensaje(e) {
+    var d = e.data;
+    if (!d || d.pimathCode !== 'error') return;
+    var f = app && app.querySelector('.pc-frame');
+    if (!f || e.source !== f.contentWindow) return;
+    ultimoErrorJuego = String(d.msg || 'Error');
+    $('pcErrTxt').textContent = 'El proyecto tiene un error: ' + ultimoErrorJuego;
+    $('pcErrBar').style.display = 'flex';
+  }
+  function ocultarError() { ultimoErrorJuego = ''; var b = $('pcErrBar'); if (b) b.style.display = 'none'; }
+
+  function corregirError() {
+    if (ocupado || !actual.code) return;
+    var msg = ultimoErrorJuego || 'No funciona';
+    ocultarError();
+    ejecutar('Corregir el error del proyecto', { accion: 'corregir', codigo: actual.code, problema: 'Al ejecutar sale este error: ' + msg + '. Si algo no se ve o no responde, corrígelo también.' }, 'Leyendo el error', actual.name);
   }
 
   // Si editaste el código a mano, se aplica antes de ver, guardar o exportar
@@ -640,9 +680,10 @@
 
   function pestana(p) {
     var ver = p === 'ver' && esWeb();
-    if (ver && sincronizarEdicion()) refrescarVista();
+    if (ver && sincronizarEdicion()) vistaVieja = true;
     $('pcVer').style.display = ver ? '' : 'none';
     $('pcCod').style.display = ver ? 'none' : '';
+    if (ver && vistaVieja) refrescarVista();
     $('pcTabVer').classList.toggle('on', ver);
     $('pcTabCod').classList.toggle('on', !ver);
     if (!ver) { pintarCodigo(); }
