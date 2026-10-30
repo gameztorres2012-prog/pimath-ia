@@ -4,13 +4,14 @@
 // - NUNCA guarda /api/ (las respuestas de la IA deben ser siempre frescas).
 // - NO borra la caché del modelo de IA del modo sin internet (la maneja transformers.js).
 
-const CACHE_NAME = 'pimath-ia-v5';
+const CACHE_NAME = 'pimath-ia-v7';
 const CDN_CACHE = 'pimath-ia-cdn-v1';
 const CDN_HOSTS = [
   'cdn.jsdelivr.net',
   'cdnjs.cloudflare.com',
   'fonts.googleapis.com',
-  'fonts.gstatic.com'
+  'fonts.gstatic.com',
+  'www.gstatic.com'
 ];
 const APP_SHELL = [
   '/',
@@ -21,8 +22,12 @@ const APP_SHELL = [
   '/gemini-barra.css',
   '/scroll-fix.js',
   '/premium-ui.js',
+  '/premium-panel.js',
   '/portada.js',
   '/portada.json',
+  '/grupos.js',
+  '/grupos-core.js',
+  '/imagenes.js',
   '/offline-ia.js'
 ];
 
