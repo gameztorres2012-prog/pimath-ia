@@ -224,7 +224,7 @@
 
 // ===== Carga del panel Premium (va en un archivo aparte para que cada archivo sea liviano) =====
 (function () {
-  ['/premium-ui.js', '/portada.js', '/pimath-code.js'].forEach(function (src) {
+  ['/premium-ui.js', '/portada.js', '/pimath-code.js', '/pimath-videos.js'].forEach(function (src) {
     var s = document.createElement('script');
     s.src = src;
     s.defer = true;
