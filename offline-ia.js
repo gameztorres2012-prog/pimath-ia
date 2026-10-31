@@ -1,9 +1,9 @@
-// Pimath IA - Modo sin internet (Gemma 4 E2B se ejecuta en el propio dispositivo con WebGPU)
+// Pimath IA - Modo sin internet (Qwen2.5 1.5B, un modelo liviano de ~1.2 GB, se ejecuta en el propio dispositivo con WebGPU)
 // Se carga solo cuando un usuario Premium abre el panel o necesita responder sin internet.
 (function () {
   var VERSION = '4.2.0';
   var BASE = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@' + VERSION;
-  var MODEL = 'onnx-community/gemma-4-E2B-it-ONNX';
+  var MODEL = 'onnx-community/Qwen2.5-1.5B-Instruct';
   var FLAG = 'pimath_offline_model';
 
   var lib = null;
@@ -26,13 +26,13 @@
   function listo() {
     try {
       var v = JSON.parse(localStorage.getItem(FLAG) || 'null');
-      return !!(v && v.listo && v.version === VERSION);
+      return !!(v && v.listo && v.version === VERSION && v.model === MODEL);
     } catch (e) { return false; }
   }
 
   function marcar(si) {
     try {
-      if (si) localStorage.setItem(FLAG, JSON.stringify({ listo: true, version: VERSION, t: Date.now() }));
+      if (si) localStorage.setItem(FLAG, JSON.stringify({ listo: true, version: VERSION, model: MODEL, t: Date.now() }));
       else localStorage.removeItem(FLAG);
     } catch (e) {}
   }
@@ -85,7 +85,21 @@
 
   // Descarga única del modelo (necesita internet). Al terminar libera la memoria.
   async function descargar(onProgreso) {
-    var g = await cargarModelo(onProgreso);
+    // Si quedó guardada una IA anterior (más pesada), se borra para liberar espacio
+    try {
+      var previo = JSON.parse(localStorage.getItem(FLAG) || 'null');
+      if (previo && previo.model !== MODEL) await borrar();
+    } catch (e) {}
+    // La barra se actualiza como máximo 2 veces por segundo para no trabar la tablet
+    var ultimoT = 0, ultimoP = -1;
+    var suave = function (p) {
+      var t = Date.now();
+      if (p >= 100 || (t - ultimoT > 500 && Math.floor(p) !== ultimoP)) {
+        ultimoT = t; ultimoP = Math.floor(p);
+        if (onProgreso) onProgreso(p);
+      }
+    };
+    var g = await cargarModelo(suave);
     marcar(true);
     try { if (g && typeof g.dispose === 'function') await g.dispose(); } catch (e) {}
     generator = null;
