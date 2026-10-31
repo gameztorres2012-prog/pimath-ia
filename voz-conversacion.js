@@ -1,6 +1,7 @@
 // Pimath IA: MODO CONVERSACIÓN POR VOZ
-// Toca 🗣️ una sola vez: Pimath te escucha, responde en voz alta y vuelve a escucharte solo.
-// Termina diciendo "adiós" o tocando "Finalizar". Usa la misma IA y el mismo historial del chat.
+// Toca Hablar una sola vez: Pimath te saluda, te escucha, piensa, responde en voz alta y vuelve a escucharte solo.
+// Termina diciendo "adiós" o tocando "Finalizar". Usa la misma IA que el chat.
+// Si pides un video ("búscame un video de fracciones"), Pimath lo busca y te muestra las tarjetas en la misma pantalla.
 (function () {
   'use strict';
 
@@ -16,6 +17,9 @@
   var wake = null;           // pantalla encendida
   var timerEspera = null;
   var ui = {};
+
+  // Instrucción corta que se añade a lo que dices para que Pimath responda como en una conversación hablada
+  var VOZ_NOTA = ' (Respuesta hablada en español: natural, de máximo tres frases, sin listas ni símbolos.)';
 
   var ESTADOS = {
     escuchando: ['Te escucho…', 'Habla con naturalidad'],
@@ -53,7 +57,10 @@
       '@keyframes voOnda{0%{box-shadow:0 0 0 0 rgba(90,175,255,.5)}100%{box-shadow:0 0 0 52px rgba(90,175,255,0)}}',
       '#vozEstado{font-size:1.4rem;font-weight:600;margin:34px 0 0}',
       '#vozAyuda{font-size:.9rem;opacity:.65;margin:6px 0 0}',
-      '#vozTexto{max-width:520px;min-height:3.6em;max-height:28vh;overflow:auto;font-size:1rem;line-height:1.45;opacity:.88;margin-top:16px}',
+      '#vozTexto{max-width:520px;width:100%;min-height:3.6em;max-height:34vh;overflow:auto;font-size:1rem;line-height:1.45;opacity:.95;margin-top:16px}',
+      '#vozVideos{max-width:520px;width:100%;max-height:34vh;overflow:auto;margin-top:6px}',
+      '#vozVideos .pmv-lista{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));text-align:left;margin-top:6px}',
+      '#vozVideos .pmv-mas{background:rgba(255,255,255,.92);color:#081544}',
       '#vozFin{background:rgba(255,255,255,.95);color:#081544;border:none;border-radius:999px;padding:13px 36px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}'
     ].join('');
     var st = document.createElement('style');
@@ -63,13 +70,14 @@
     var ov = document.createElement('div');
     ov.id = 'vozOverlay';
     ov.setAttribute('role', 'dialog');
-    ov.setAttribute('aria-label', 'Conversación por voz con Pimath IA');
+    ov.setAttribute('aria-label', 'Conversación por voz con Pimath');
     ov.innerHTML =
-      '<div id="vozTitulo">Conversación con Pimath IA</div>' +
+      '<div id="vozTitulo">Conversación con Pimath</div>' +
       '<div id="vozCentro">' +
         '<button id="vozOrbe" type="button" aria-label="Hablar o interrumpir"><span class="vo-halo"></span><span class="vo-core"></span><span class="vo-brillo"></span></button>' +
         '<p id="vozEstado"></p><p id="vozAyuda"></p>' +
         '<div id="vozTexto"></div>' +
+        '<div id="vozVideos"></div>' +
       '</div>' +
       '<button id="vozFin" type="button">Finalizar</button>';
     document.body.appendChild(ov);
@@ -78,6 +86,7 @@
     ui.estado = ov.querySelector('#vozEstado');
     ui.ayuda = ov.querySelector('#vozAyuda');
     ui.texto = ov.querySelector('#vozTexto');
+    ui.videos = ov.querySelector('#vozVideos');
     ui.orbe = ov.querySelector('#vozOrbe');
     ui.orbe.addEventListener('click', tocarOrbe);
     ov.querySelector('#vozFin').addEventListener('click', cerrar);
@@ -97,6 +106,14 @@
   }
 
   // ---------- Abrir / cerrar ----------
+  function saludo() {
+    var esp = String(window.__pimathLang || 'es-ES').indexOf('es') === 0;
+    var nombre = '';
+    try { nombre = (typeof studentName !== 'undefined' && studentName) ? String(studentName).split(' ')[0] : ''; } catch (e) {}
+    if (!esp) return 'Hello' + (nombre ? ', ' + nombre : '') + '. How can I help you?';
+    return 'Hola' + (nombre ? ', ' + nombre : '') + '. Dime, ¿en qué te ayudo?';
+  }
+
   function abrir() {
     if (activo) return;
     try { if (typeof unlockSpeech === 'function') unlockSpeech(); } catch (e) {}
@@ -110,7 +127,7 @@
     }
     estado = 'escuchando';
     pintar('');
-    escuchar();
+    hablar(saludo()); // saluda y luego empieza a escuchar solo
   }
 
   function cerrar() {
@@ -129,6 +146,7 @@
     try { if (wake) wake.release(); } catch (e) {}
     wake = null;
     estado = 'inactivo';
+    if (ui.videos) ui.videos.textContent = '';
     if (ui.ov) ui.ov.className = '';
   }
 
@@ -146,6 +164,19 @@
       escuchar();
     }
   }
+
+  // Al abrir un video, Pimath se calla y deja de escuchar para no mezclarse con el audio del video
+  window.addEventListener('pimath-video-abierto', function () {
+    if (!activo) return;
+    idHabla++;
+    idPregunta++;
+    pararAudio();
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    try { if (rec) { rec.onend = null; rec.abort(); } } catch (e) {}
+    avatarHablando(false);
+    estado = 'pausa';
+    pintar();
+  });
 
   // ---------- Escuchar ----------
   function escuchar() {
@@ -177,7 +208,7 @@
         return;
       }
       silencios++;
-      if (silencios >= 2) {
+      if (silencios >= 4) {
         estado = 'pausa';
         pintar('No te escuché. Toca el círculo cuando quieras hablar.');
         return;
@@ -205,9 +236,18 @@
     var mia = ++idPregunta;
     try { if (ctlVoz) ctlVoz.abort(); } catch (e) {}
     ctlVoz = new AbortController();
+
+    // Para respuestas normales se le pide a Pimath que hable de forma natural y breve.
+    // Los pedidos de videos y la pregunta por su creador se envían tal cual.
+    var nota = VOZ_NOTA;
+    try {
+      if (window.__pimathVideos && window.__pimathVideos.esPedidoDeVideo(texto)) nota = '';
+      if (window.__pimathEsPreguntaCreador && window.__pimathEsPreguntaCreador(texto)) nota = '';
+    } catch (e) {}
+
     var cuerpo = {
       history: vozTurnos.slice(-12),
-      message: texto,
+      message: texto + nota,
       image: null,
       studentName: (typeof studentName !== 'undefined' ? studentName : ''),
       area: (typeof currentArea !== 'undefined' ? currentArea : '')
@@ -247,6 +287,14 @@
       .replace(/\\pm/g, ' más menos ')
       .replace(/\\cdot|\\times/g, ' por ')
       .replace(/\\[a-zA-Z]+/g, ' ')
+      .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/gu, ' ')
+      .replace(/²/g, ' al cuadrado ')
+      .replace(/³/g, ' al cubo ')
+      .replace(/×/g, ' por ')
+      .replace(/÷/g, ' entre ')
+      .replace(/[−–]/g, ' menos ')
+      .replace(/%/g, ' por ciento ')
+      .replace(/(\d)\s*\/\s*(\d)/g, '$1 sobre $2')
       .replace(/\$/g, ' ')
       .replace(/[{}]/g, ' ')
       .replace(/=/g, ' igual a ')
@@ -426,7 +474,7 @@
     return true;
   }
 
-  // Para el botón "🔊 Escuchar" de cada respuesta
+  // Para el botón "Escuchar" de cada respuesta
   window.__pimathLeerIA = function (textoOriginal) {
     var cfg = ttsCfg();
     if (!cfg.on) return false;
@@ -445,11 +493,18 @@
     if (!activo) return;
     esperando = false;
     clearTimeout(timerEspera);
+    // Si la respuesta trae videos, se muestran como tarjetas y la marca no se lee en voz alta
+    var marca = /⟦pmv:([a-z0-9]+)\|([^⟧]*)⟧/.exec(String(textoOriginal || ''));
+    textoOriginal = String(textoOriginal || '').replace(/⟦pmv:[^⟧]*⟧/g, '');
     var limpio = limpiarParaVoz(textoOriginal);
     if (!limpio) { escuchar(); return; }
     var mi = ++idHabla;
     estado = 'hablando';
-    pintar(String(textoOriginal || '').replace(/[*#`$]/g, '').slice(0, 400));
+    pintar(textoOriginal.replace(/[*#`$]/g, '').slice(0, 400));
+    if (ui.videos) ui.videos.textContent = '';
+    if (marca && window.__pimathVideosTarjetas && ui.videos) {
+      try { ui.videos.appendChild(window.__pimathVideosTarjetas(marca[1], marca[2])); } catch (e) {}
+    }
     avatarHablando(true);
     pararAudio();
     try { window.speechSynthesis.cancel(); } catch (e) {}

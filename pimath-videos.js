@@ -174,6 +174,7 @@
   function abrirReproductor(v) {
     estilos();
     cerrarReproductor();
+    try { window.dispatchEvent(new Event('pimath-video-abierto')); } catch (e) {}
     var ov = el('div', '');
     ov.id = 'pmvPlayer';
     ov.addEventListener('click', function (e) { if (e.target === ov) cerrarReproductor(); });
@@ -249,6 +250,9 @@
     cont.appendChild(mas);
     return cont;
   }
+
+  // Lo usa el modo de conversación por voz para mostrar las tarjetas en su pantalla
+  window.__pimathVideosTarjetas = function (id, q) { estilos(); return crearTarjetas(id, q); };
 
   function procesar(msg) {
     if (!msg || msg.dataset.pmv === '1' || msg.classList.contains('thinking')) return;
