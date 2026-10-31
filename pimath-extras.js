@@ -119,7 +119,7 @@
 
       card.appendChild(el('p', 'margin:10px 0 2px;font-weight:600;', 'Materia'));
       var cajaMate = el('div', ''), cajaLibre = el('div', 'display:none;');
-      opciones(card, [['mate', '🧮 Matemáticas'], ['libre', '✍️ Escribir mi tema']], materia, function (v) {
+      opciones(card, [['mate', 'Matemáticas'], ['libre', 'Escribir mi tema']], materia, function (v) {
         materia = v;
         cajaMate.style.display = v === 'mate' ? '' : 'none';
         cajaLibre.style.display = v === 'libre' ? '' : 'none';
@@ -199,7 +199,7 @@
         var ok = o[0] === correcta;
         b.style.cssText += ok ? 'border-color:#2E7D32;background:#E3F3E5;' : 'border-color:#C62828;background:#FBE4E4;';
         if (!ok) botones.forEach(function (x) { if (x.firstChild.textContent === correcta) x.style.cssText += 'border-color:#2E7D32;background:#E3F3E5;'; });
-        var res = el('div', 'margin-top:8px;font-weight:600;color:' + (ok ? '#2E7D32' : '#C62828') + ';', ok ? '✅ ¡Correcto!' : '❌ Incorrecto. La correcta era la ' + correcta + '.');
+        var res = el('div', 'margin-top:8px;font-weight:600;color:' + (ok ? '#2E7D32' : '#C62828') + ';', ok ? '¡Correcto!' : 'Incorrecto. La correcta era la ' + correcta + '.');
         caja.appendChild(res);
         enviarTexto('Elegí la opción ' + o[0] + ' (' + (ok ? 'correcta' : 'incorrecta; la correcta era ' + correcta) + '). Explícame brevemente por qué y ponme el siguiente ejercicio con el mismo formato A–E.');
       });
@@ -433,8 +433,7 @@
 
     var items = [];
     if (window.__pimathAbrirVoz) items.push(['Hablar', 'voz', function () { window.__pimathAbrirVoz(); }]);
-    items.push(['Practicar', 'practicar', abrirPractica], ['Pizarra', 'pizarra', abrirPizarra],
-               ['Progreso', 'progreso', abrirProgreso], ['Idioma', 'idioma', abrirIdioma]);
+    items.push(['Practicar', 'practicar', abrirPractica], ['Pizarra', 'pizarra', abrirPizarra]);
 
     var nav = document.createElement('nav');
     nav.id = 'pxMenuLat';
@@ -453,10 +452,69 @@
     sb.insertBefore(rec, nuevo);
   }
 
+  // ---- ⚙️ Configuración (en el menú de la foto de perfil): Progreso e Idioma ----
+  var GEAR = '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>';
+  ICONOS.gear = GEAR;
+  var CFG = [['Progreso', abrirProgreso, 'progreso'], ['Idioma', abrirIdioma, 'idioma']];
+  var BTN_CFG = 'width:100%;padding:9px;border:1px solid #E4DCC8;border-radius:10px;background:#FBF8EE;color:#1C2620;font:inherit;font-size:.88rem;cursor:pointer;text-align:left;margin:0 0 8px;box-sizing:border-box;';
+  function crearConfig(menu) {
+    var caja = document.createElement('div'); caja.id = 'pxCfg';
+    var cab = document.createElement('button'); cab.type = 'button'; cab.style.cssText = BTN_CFG + 'display:flex;justify-content:space-between;align-items:center;';
+    var tit = document.createElement('div'); tit.style.cssText = 'display:flex;align-items:center;gap:8px;'; tit.innerHTML = svg('gear').replace('<svg ', '<svg style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round" ') + '<div>Configuración</div>';
+    var fl = document.createElement('div'); fl.textContent = '▾'; fl.style.cssText = 'transition:transform .2s;';
+    cab.appendChild(tit); cab.appendChild(fl);
+    var lista = document.createElement('div'); lista.style.cssText = 'display:none;padding-left:8px;';
+    CFG.forEach(function (c) {
+      var b = document.createElement('button'); b.type = 'button'; b.style.cssText = BTN_CFG + 'display:flex;align-items:center;gap:8px;'; b.innerHTML = svg(c[2]).replace('<svg ', '<svg style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round" ') + '<div>' + c[0] + '</div>';
+      b.addEventListener('click', function () { menu.classList.remove('open'); setTimeout(c[1], 120); });
+      lista.appendChild(b);
+    });
+    cab.addEventListener('click', function () {
+      var abierto = lista.style.display !== 'none';
+      lista.style.display = abierto ? 'none' : 'block';
+      fl.style.transform = abierto ? '' : 'rotate(180deg)';
+    });
+    caja.appendChild(cab); caja.appendChild(lista);
+    return caja;
+  }
+  function configPerfil() {
+    var menu = document.getElementById('userMenu');
+    var slot = document.getElementById('userSlot');
+    if (!menu || !slot) return;
+    function poner() {
+      // sesión iniciada: agregar "Configuración" antes de "Cerrar sesión"
+      if (menu.children.length && !menu.querySelector('#pxCfg')) {
+        var salir = menu.querySelector('button');
+        var caja = crearConfig(menu);
+        if (salir) menu.insertBefore(caja, salir); else menu.appendChild(caja);
+      }
+      // sin sesión: botón de engranaje junto al icono de Google
+      var tieneAvatar = !!slot.querySelector('.avatar-btn');
+      var eng = document.getElementById('pxGear');
+      if (!tieneAvatar && !eng) {
+        eng = document.createElement('button'); eng.id = 'pxGear'; eng.type = 'button'; eng.innerHTML = svg('gear').replace('<svg ', '<svg style="width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round" '); eng.title = 'Configuración';
+        eng.style.cssText = 'border:none;background:none;color:#1C2620;cursor:pointer;margin-right:6px;padding:4px;display:flex;';
+        eng.addEventListener('click', function () {
+          hoja('Configuración', function (card, cerrar) {
+            CFG.forEach(function (c) {
+              var b = el('button', OP + 'display:block;width:100%;text-align:left;margin:6px 0;', c[0]); b.type = 'button';
+              b.addEventListener('click', function () { cerrar(); setTimeout(c[1], 120); });
+              card.appendChild(b);
+            });
+          });
+        });
+        slot.insertBefore(eng, slot.firstChild);
+      } else if (tieneAvatar && eng) { eng.remove(); }
+    }
+    poner();
+    new MutationObserver(function () { poner(); }).observe(menu, { childList: true });
+    new MutationObserver(function () { poner(); }).observe(slot, { childList: true });
+  }
+
   function iniciar() {
     var n = 0;
     (function esperar() {
-      if (document.getElementById('chat') && document.getElementById('input') && document.getElementById('sidebar')) { estilos(); menuLateral(); enganchar(); }
+      if (document.getElementById('chat') && document.getElementById('input') && document.getElementById('sidebar')) { estilos(); menuLateral(); configPerfil(); enganchar(); }
       else if (++n < 50) setTimeout(esperar, 200);
     })();
   }
